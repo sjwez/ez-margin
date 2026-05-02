@@ -65,7 +65,7 @@ header { margin-bottom: 56px; }
 .view { display: none; }
 .view.active { display: block; }
 .add {
-  margin-bottom: 40px;
+  margin-bottom: 28px;
   padding-bottom: 28px;
   border-bottom: 1px solid var(--line);
 }
@@ -91,10 +91,11 @@ header { margin-bottom: 56px; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 20px;
-  gap: 12px;
+  margin-top: 16px;
+  gap: 8px;
   flex-wrap: wrap;
 }
+.actions .right { display: flex; gap: 8px; flex-wrap: wrap; }
 .hint { color: var(--muted); font-size: 12px; font-style: italic; }
 button {
   background: transparent;
@@ -109,11 +110,35 @@ button {
   transition: all 0.15s;
 }
 button:hover { background: var(--ink); color: var(--bg); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+button:disabled:hover { background: transparent; color: var(--ink); }
 button.ghost {
   border-color: var(--line);
   color: var(--muted);
 }
 button.ghost:hover { background: transparent; color: var(--ink); border-color: var(--ink); }
+.bulk-area {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
+.bulk-area textarea {
+  width: 100%;
+  min-height: 120px;
+  background: transparent;
+  border: 1px solid var(--line);
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  padding: 12px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.review-trigger {
+  margin: 0 0 20px;
+}
+.review-trigger button { padding: 8px 22px; }
 .filters {
   display: flex;
   gap: 18px;
@@ -249,11 +274,11 @@ a.item-title:hover { text-decoration: underline; text-underline-offset: 3px; tex
   font-size: 18px;
   font-weight: 500;
   color: var(--ink);
-  margin-right: 10px;
 }
 .word-meaning {
   color: var(--soft);
   font-size: 15px;
+  margin-left: 4px;
 }
 .word-example {
   display: block;
@@ -265,12 +290,95 @@ a.item-title:hover { text-decoration: underline; text-underline-offset: 3px; tex
 .word-row.learned .word-text,
 .word-row.learned .word-meaning,
 .word-row.learned .word-example { color: var(--muted); }
+.say {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0 6px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.say:hover { color: var(--ink); background: none; }
 .editing-banner {
   background: transparent;
   color: var(--muted);
   font-size: 12px;
   font-style: italic;
   margin-bottom: 8px;
+}
+/* review (flashcard) mode */
+.review {
+  display: none;
+  text-align: center;
+  padding: 60px 0 20px;
+}
+.review.active { display: block; }
+.review-card {
+  cursor: pointer;
+  padding: 56px 24px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+  user-select: none;
+}
+.review-word {
+  font-size: 42px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+  line-height: 1.2;
+}
+.review-word .say {
+  font-size: 14px;
+  vertical-align: middle;
+}
+.review-prompt {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 14px;
+}
+.review-meaning {
+  font-size: 19px;
+  color: var(--soft);
+  margin: 4px 0 14px;
+  line-height: 1.5;
+}
+.review-example {
+  font-size: 15px;
+  color: var(--muted);
+  font-style: italic;
+  line-height: 1.6;
+}
+.review-grade {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+.review-grade button { padding: 10px 26px; }
+.review-meta {
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}
+.review-meta a { cursor: pointer; color: var(--muted); margin-left: 14px; text-decoration: underline; }
+.review-meta a:hover { color: var(--ink); }
+.review-done {
+  font-size: 22px;
+  color: var(--ink);
+  text-align: center;
+  padding: 80px 0 16px;
+}
+.review-done-sub {
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 32px;
 }
 footer {
   margin-top: 64px;
@@ -290,6 +398,7 @@ footer a:hover { color: var(--ink); }
   .wrap { padding: 56px 24px 120px; }
   .nav { gap: 18px; }
   .item-actions { opacity: 1; }
+  .review-word { font-size: 34px; }
 }
 </style>
 </head>
@@ -339,22 +448,71 @@ footer a:hover { color: var(--ink); }
 
   <!-- WORDS -->
   <section id="view-words" class="view">
-    <div class="add">
-      <input id="w-word" placeholder="word" autocomplete="off">
-      <input id="w-meaning" placeholder="meaning" autocomplete="off">
-      <textarea id="w-example" placeholder="example sentence (optional)" rows="1"></textarea>
-      <div class="actions">
-        <span class="hint">⏎ to save</span>
-        <button id="w-add">Add</button>
+    <div id="w-main">
+      <div class="add">
+        <input id="w-word" placeholder="word" autocomplete="off">
+        <input id="w-meaning" placeholder="meaning" autocomplete="off">
+        <textarea id="w-example" placeholder="example sentence (optional)" rows="1"></textarea>
+        <div class="actions">
+          <span class="hint">⏎ to save</span>
+          <span class="right">
+            <button id="w-fetch" class="ghost" type="button">fetch</button>
+            <button id="w-bulk-toggle" class="ghost" type="button">+ bulk</button>
+            <button id="w-add">Add</button>
+          </span>
+        </div>
+        <div id="w-bulk-area" class="bulk-area" style="display:none">
+          <textarea id="w-bulk-text" placeholder="paste lines like:&#10;ephemeral, lasting only a short time&#10;ubiquitous, present everywhere&#10;candid, frank and honest"></textarea>
+          <div class="actions">
+            <span class="hint">one per line · `word, meaning` · duplicates skipped</span>
+            <span class="right">
+              <button id="w-bulk-cancel" class="ghost" type="button">Cancel</button>
+              <button id="w-bulk-import" type="button">Import</button>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="review-trigger">
+        <button id="w-review-btn" type="button">review (0)</button>
+      </div>
+      <div class="filters">
+        <a data-filter="all" class="active">all</a>
+        <a data-filter="learning">learning</a>
+        <a data-filter="learned">learned</a>
+      </div>
+      <div class="search"><input id="w-search" placeholder="search…" autocomplete="off"></div>
+      <ul class="list" id="w-list"></ul>
+    </div>
+
+    <!-- review mode -->
+    <div id="w-review" class="review">
+      <div id="r-active" style="display:none">
+        <div class="review-card" id="r-card">
+          <div class="review-word">
+            <span id="r-word"></span>
+            <button class="say" id="r-say" type="button" title="speak">say</button>
+          </div>
+          <div class="review-prompt" id="r-prompt">click to reveal</div>
+          <div id="r-back" style="display:none">
+            <div class="review-meaning" id="r-meaning"></div>
+            <div class="review-example" id="r-example"></div>
+          </div>
+        </div>
+        <div class="review-grade" id="r-grade" style="display:none">
+          <button id="r-forgot" type="button">forgot</button>
+          <button id="r-got" type="button">got it</button>
+        </div>
+        <div class="review-meta">
+          <span id="r-progress"></span>
+          <a id="r-exit">exit</a>
+        </div>
+      </div>
+      <div id="r-done" style="display:none">
+        <div class="review-done">all done. ✓</div>
+        <div class="review-done-sub" id="r-done-sub"></div>
+        <div class="review-meta"><a id="r-done-exit">exit</a></div>
       </div>
     </div>
-    <div class="filters">
-      <a data-filter="all" class="active">all</a>
-      <a data-filter="learning">learning</a>
-      <a data-filter="learned">learned</a>
-    </div>
-    <div class="search"><input id="w-search" placeholder="search…" autocomplete="off"></div>
-    <ul class="list" id="w-list"></ul>
   </section>
 
   <footer>
@@ -412,6 +570,18 @@ footer a:hover { color: var(--ink); }
       });
     });
   }
+  function speak(text) {
+    if (!text) return;
+    if (!('speechSynthesis' in window)) {
+      alert('this browser does not support speech.');
+      return;
+    }
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = 0.95;
+    speechSynthesis.speak(u);
+  }
 
   /* -------- routing -------- */
   const sections = ['papers', 'notes', 'words'];
@@ -423,6 +593,7 @@ footer a:hover { color: var(--ink); }
       const link = document.querySelector(`[data-nav="${name}"]`);
       if (link) link.classList.toggle('active', name === s);
     });
+    if (s !== 'words' && reviewMode) exitReview();
     updateCount();
   }
   window.addEventListener('hashchange', route);
@@ -586,6 +757,23 @@ footer a:hover { color: var(--ink); }
 
   /* -------- words -------- */
   let wordFilter = 'all';
+  const REVIEW_INTERVALS = [1, 3, 7, 14, 30, 60, 120]; // days
+
+  function isDue(w) {
+    if (w.learned) return false;
+    if (!w.nextReview) return true;
+    return w.nextReview <= Date.now();
+  }
+  function dueCount() {
+    return store.words.filter(isDue).length;
+  }
+  function updateReviewBtn() {
+    const n = dueCount();
+    const btn = $('w-review-btn');
+    btn.textContent = n > 0 ? `review (${n})` : 'all caught up';
+    btn.disabled = n === 0;
+  }
+
   function renderWords() {
     const q = $('w-search').value.trim().toLowerCase();
     const filtered = store.words.filter(w => {
@@ -602,7 +790,7 @@ footer a:hover { color: var(--ink); }
         <li class="word-row ${w.learned ? 'learned' : ''}">
           <span class="word-check" data-act="toggle-word" data-id="${esc(w.id)}" title="${w.learned ? 'mark as learning' : 'mark as learned'}"></span>
           <div class="word-main">
-            <span class="word-text">${esc(w.word)}</span>
+            <span class="word-text">${esc(w.word)}</span><button class="say" data-act="say-word" data-word="${esc(w.word)}" type="button">say</button>
             <span class="word-meaning">${esc(w.meaning)}</span>
             ${w.example ? `<span class="word-example">${esc(w.example)}</span>` : ''}
           </div>
@@ -610,7 +798,6 @@ footer a:hover { color: var(--ink); }
         </li>
       `).join('');
     }
-    // update filter counts
     const all = store.words.length;
     const learned = store.words.filter(w => w.learned).length;
     const learning = all - learned;
@@ -619,19 +806,27 @@ footer a:hover { color: var(--ink); }
       const n = f === 'all' ? all : (f === 'learning' ? learning : learned);
       a.textContent = `${f} (${n})`;
     });
+    updateReviewBtn();
     updateCount();
+  }
+  function makeWord(word, meaning, example) {
+    return {
+      id: uid(),
+      word, meaning,
+      example: example || '',
+      learned: false,
+      reps: 0,
+      interval: 0,
+      nextReview: Date.now(),
+      addedAt: Date.now()
+    };
   }
   function addWord() {
     const word = $('w-word').value.trim();
     const meaning = $('w-meaning').value.trim();
     if (!word) { $('w-word').focus(); return; }
     if (!meaning) { $('w-meaning').focus(); return; }
-    store.words.unshift({
-      id: uid(), word, meaning,
-      example: $('w-example').value.trim(),
-      learned: false,
-      addedAt: Date.now()
-    });
+    store.words.unshift(makeWord(word, meaning, $('w-example').value.trim()));
     persist('words');
     ['w-word','w-meaning','w-example'].forEach(id => $(id).value = '');
     autosize($('w-example'));
@@ -662,7 +857,205 @@ footer a:hover { color: var(--ink); }
         persist('words');
         renderWords();
       }
+    } else if (el.dataset.act === 'say-word') {
+      speak(el.dataset.word);
     }
+  });
+
+  /* -------- fetch definition -------- */
+  $('w-fetch').addEventListener('click', async () => {
+    const word = $('w-word').value.trim();
+    if (!word) { $('w-word').focus(); return; }
+    const btn = $('w-fetch');
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '…';
+    try {
+      const r = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      if (r.status === 404) throw new Error('word not found');
+      if (!r.ok) throw new Error('fetch failed (' + r.status + ')');
+      const data = await r.json();
+      const meaning = data[0]?.meanings?.[0];
+      const def = meaning?.definitions?.[0];
+      if (!def) throw new Error('no definition');
+      const pos = meaning.partOfSpeech ? meaning.partOfSpeech + '. ' : '';
+      if (!$('w-meaning').value.trim()) {
+        $('w-meaning').value = pos + (def.definition || '');
+      }
+      if (def.example && !$('w-example').value.trim()) {
+        $('w-example').value = def.example;
+        autosize($('w-example'));
+      }
+      $('w-meaning').focus();
+    } catch (err) {
+      alert('fetch: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = orig;
+    }
+  });
+
+  /* -------- bulk import -------- */
+  $('w-bulk-toggle').addEventListener('click', () => {
+    const ba = $('w-bulk-area');
+    const open = ba.style.display === 'none';
+    ba.style.display = open ? '' : 'none';
+    if (open) $('w-bulk-text').focus();
+  });
+  $('w-bulk-cancel').addEventListener('click', () => {
+    $('w-bulk-area').style.display = 'none';
+    $('w-bulk-text').value = '';
+  });
+  $('w-bulk-import').addEventListener('click', () => {
+    const text = $('w-bulk-text').value;
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const existing = new Set(store.words.map(w => (w.word || '').toLowerCase()));
+    let added = 0, skipped = 0, malformed = 0;
+    const newOnes = [];
+    for (const line of lines) {
+      const m = line.match(/^([^,\t]+)[,\t]\s*(.+)$/);
+      if (!m) { malformed++; continue; }
+      const word = m[1].trim();
+      const meaning = m[2].trim();
+      if (!word || !meaning) { malformed++; continue; }
+      if (existing.has(word.toLowerCase())) { skipped++; continue; }
+      newOnes.push(makeWord(word, meaning, ''));
+      existing.add(word.toLowerCase());
+      added++;
+    }
+    if (newOnes.length) {
+      store.words = newOnes.concat(store.words);
+      persist('words');
+    }
+    $('w-bulk-text').value = '';
+    $('w-bulk-area').style.display = 'none';
+    renderWords();
+    const parts = [`imported ${added}`];
+    if (skipped) parts.push(`skipped ${skipped} duplicate${skipped === 1 ? '' : 's'}`);
+    if (malformed) parts.push(`${malformed} malformed line${malformed === 1 ? '' : 's'}`);
+    alert(parts.join(' · '));
+  });
+
+  /* -------- review (SRS) -------- */
+  let reviewMode = false;
+  let reviewQueue = [];
+  let reviewIdx = 0;
+  let cardFlipped = false;
+  let reviewedThisSession = 0;
+
+  function startReview() {
+    reviewQueue = store.words.filter(isDue);
+    if (reviewQueue.length === 0) return;
+    // shuffle for variety
+    for (let i = reviewQueue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [reviewQueue[i], reviewQueue[j]] = [reviewQueue[j], reviewQueue[i]];
+    }
+    reviewIdx = 0;
+    cardFlipped = false;
+    reviewedThisSession = 0;
+    reviewMode = true;
+    $('w-main').style.display = 'none';
+    $('w-review').classList.add('active');
+    $('r-active').style.display = '';
+    $('r-done').style.display = 'none';
+    renderCard();
+  }
+  function exitReview() {
+    reviewMode = false;
+    speechSynthesis.cancel();
+    $('w-main').style.display = '';
+    $('w-review').classList.remove('active');
+    renderWords();
+  }
+  function renderCard() {
+    const card = reviewQueue[reviewIdx];
+    if (!card) {
+      // done
+      $('r-active').style.display = 'none';
+      $('r-done').style.display = '';
+      const next = nextReviewETA();
+      $('r-done-sub').textContent = `${reviewedThisSession} reviewed${next ? ` · next batch ${next}` : ''}`;
+      return;
+    }
+    // re-fetch latest from store (in case modified)
+    const w = store.words.find(x => x.id === card.id) || card;
+    $('r-word').textContent = w.word;
+    $('r-meaning').textContent = w.meaning || '';
+    $('r-example').textContent = w.example || '';
+    $('r-progress').textContent = `${reviewIdx + 1} of ${reviewQueue.length}`;
+    cardFlipped = false;
+    $('r-prompt').style.display = '';
+    $('r-back').style.display = 'none';
+    $('r-grade').style.display = 'none';
+  }
+  function flipCard() {
+    if (cardFlipped) return;
+    cardFlipped = true;
+    $('r-prompt').style.display = 'none';
+    $('r-back').style.display = '';
+    $('r-grade').style.display = '';
+  }
+  function gradeCard(grade) {
+    const card = reviewQueue[reviewIdx];
+    if (!card) return;
+    const w = store.words.find(x => x.id === card.id);
+    if (w) {
+      if (grade === 'forgot') {
+        w.reps = 0;
+        w.interval = 1;
+      } else {
+        w.reps = (w.reps || 0) + 1;
+        w.interval = REVIEW_INTERVALS[Math.min(w.reps - 1, REVIEW_INTERVALS.length - 1)];
+      }
+      w.nextReview = Date.now() + w.interval * 86400000;
+      persist('words');
+    }
+    reviewedThisSession++;
+    reviewIdx++;
+    renderCard();
+  }
+  function nextReviewETA() {
+    const futures = store.words
+      .filter(w => !w.learned && w.nextReview && w.nextReview > Date.now())
+      .map(w => w.nextReview);
+    if (futures.length === 0) return '';
+    const next = Math.min.apply(null, futures);
+    const days = Math.ceil((next - Date.now()) / 86400000);
+    if (days <= 0) return 'soon';
+    if (days === 1) return 'in 1 day';
+    return `in ${days} days`;
+  }
+
+  $('w-review-btn').addEventListener('click', startReview);
+  $('r-card').addEventListener('click', (e) => {
+    if (e.target.closest('.say')) return; // don't flip when clicking say
+    flipCard();
+  });
+  $('r-say').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const card = reviewQueue[reviewIdx];
+    if (card) speak(card.word);
+  });
+  $('r-forgot').addEventListener('click', () => gradeCard('forgot'));
+  $('r-got').addEventListener('click', () => gradeCard('got'));
+  $('r-exit').addEventListener('click', exitReview);
+  $('r-done-exit').addEventListener('click', exitReview);
+
+  // keyboard during review: space/click to flip, j=forgot, k=got, esc=exit
+  document.addEventListener('keydown', (e) => {
+    if (!reviewMode) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (!cardFlipped) flipCard();
+      return;
+    }
+    if (cardFlipped) {
+      if (e.key === '1' || e.key.toLowerCase() === 'j') gradeCard('forgot');
+      else if (e.key === '2' || e.key.toLowerCase() === 'k') gradeCard('got');
+    }
+    if (e.key === 'Escape') exitReview();
   });
 
   /* -------- export / import -------- */
@@ -688,7 +1081,6 @@ footer a:hover { color: var(--ink); }
     reader.onload = () => {
       try {
         const data = JSON.parse(reader.result);
-        // backward-compat: array means old papers-only export
         const incoming = Array.isArray(data)
           ? { papers: data, notes: [], words: [] }
           : { papers: data.papers || [], notes: data.notes || [], words: data.words || [] };
