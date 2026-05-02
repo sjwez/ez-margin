@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>em. — Ezio's Margin</title>
+<script>try { if (localStorage.getItem('margin.theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <style>
 :root {
@@ -12,6 +13,13 @@
   --muted: #8a8a86;
   --line: #e5e2da;
   --soft: #444;
+}
+[data-theme="dark"] {
+  --bg: #1a1a18;
+  --ink: #ece9e2;
+  --muted: #8a8a86;
+  --line: #2d2d2a;
+  --soft: #c4c2bc;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
@@ -320,6 +328,62 @@ a.item-title:hover { text-decoration: underline; text-underline-offset: 3px; tex
   font-style: italic;
   margin-bottom: 8px;
 }
+/* paper rows (read / starred) */
+.paper-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 32px 22px 0;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.paper-check {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--muted);
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: 6px;
+  position: relative;
+  transition: all 0.15s;
+}
+.paper-check:hover { border-color: var(--ink); }
+.paper-row.read .paper-check {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.paper-row.read .paper-check::after {
+  content: "✓";
+  color: var(--bg);
+  font-size: 9px;
+  font-weight: 600;
+  position: absolute;
+  top: -1px;
+  left: 2px;
+  line-height: 14px;
+}
+.paper-main { flex: 1; min-width: 0; }
+.paper-title-row { display: flex; align-items: baseline; gap: 4px; }
+.paper-row .item-title { display: inline; }
+.paper-star {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+.paper-star:hover { color: var(--ink); background: none; }
+.paper-star.on { color: var(--ink); }
+.paper-row.read .item-title,
+.paper-row.read .item-meta,
+.paper-row.read .md { color: var(--muted); }
+.paper-row.read .item-title { color: var(--muted); }
 /* markdown rendering (notes) */
 .md {
   color: var(--soft);
@@ -634,14 +698,21 @@ footer a:hover { color: var(--ink); }
   <!-- PAPERS -->
   <section id="view-papers" class="view">
     <div class="add">
+      <div id="p-banner" class="editing-banner" style="display:none">editing — <a id="p-cancel" style="cursor:pointer;text-decoration:underline">cancel</a></div>
       <input id="p-title" placeholder="paper title" autocomplete="off">
       <input id="p-url" placeholder="link (https://…)" autocomplete="off">
       <input id="p-tag" placeholder="tag (optional)" autocomplete="off">
-      <textarea id="p-note" placeholder="why it matters (optional)" rows="1"></textarea>
+      <textarea id="p-takeaway" placeholder="what I learned (optional · markdown supported)" rows="1"></textarea>
       <div class="actions">
         <span class="hint">⏎ to save · shift+⏎ for newline</span>
         <button id="p-add">Add</button>
       </div>
+    </div>
+    <div class="filters" id="p-filters">
+      <a data-filter="all" class="active">all</a>
+      <a data-filter="to-read">to read</a>
+      <a data-filter="read">read</a>
+      <a data-filter="starred">starred</a>
     </div>
     <div class="search"><input id="p-search" placeholder="search…" autocomplete="off"></div>
     <ul class="list" id="p-list"></ul>
@@ -754,7 +825,7 @@ footer a:hover { color: var(--ink); }
 
   <footer>
     <span id="count">—</span>
-    <span><a id="export">export</a> · <a id="import">import</a></span>
+    <span><a id="export">export</a> · <a id="import">import</a> · <a id="theme-toggle">dark</a></span>
   </footer>
 </div>
 
@@ -857,57 +928,148 @@ footer a:hover { color: var(--ink); }
   }
 
   /* -------- papers -------- */
+  let paperFilter = 'all';
+  let editingPaperId = null;
+
+  function migratePapers() {
+    let dirty = false;
+    for (const p of store.papers) {
+      if (p.note && !p.takeaway) { p.takeaway = p.note; delete p.note; dirty = true; }
+      if (p.read === undefined) { p.read = false; dirty = true; }
+      if (p.starred === undefined) { p.starred = false; dirty = true; }
+    }
+    if (dirty) persist('papers');
+  }
+  migratePapers();
+
   function renderPapers() {
     const q = $('p-search').value.trim().toLowerCase();
-    const filtered = store.papers.filter(p =>
-      !q || ((p.title || '') + ' ' + (p.tag || '') + ' ' + (p.note || '')).toLowerCase().includes(q)
-    );
+    const filtered = store.papers.filter(p => {
+      if (paperFilter === 'to-read' && p.read) return false;
+      if (paperFilter === 'read' && !p.read) return false;
+      if (paperFilter === 'starred' && !p.starred) return false;
+      if (q && !((p.title || '') + ' ' + (p.tag || '') + ' ' + (p.takeaway || '')).toLowerCase().includes(q)) return false;
+      return true;
+    });
     const list = $('p-list');
     if (filtered.length === 0) {
       list.innerHTML = `<li class="empty">${store.papers.length === 0 ? 'no papers yet.' : 'nothing matches.'}</li>`;
     } else {
       list.innerHTML = filtered.map(p => `
-        <li class="item">
-          <a class="item-title" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.title)}</a>
-          <div class="item-meta">
-            <span>${fmtDate(p.addedAt)}</span>
-            ${p.tag ? `<span class="item-tag">${esc(p.tag)}</span>` : ''}
+        <li class="paper-row ${p.read ? 'read' : ''}">
+          <span class="paper-check" data-act="toggle-read" data-id="${esc(p.id)}" title="${p.read ? 'mark as to-read' : 'mark as read'}"></span>
+          <div class="paper-main">
+            <div class="paper-title-row">
+              <a class="item-title" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.title)}</a>
+              <button class="paper-star ${p.starred ? 'on' : ''}" data-act="toggle-star" data-id="${esc(p.id)}" type="button" title="${p.starred ? 'unstar' : 'star'}">${p.starred ? '★' : '☆'}</button>
+            </div>
+            <div class="item-meta">
+              <span>${fmtDate(p.addedAt)}</span>
+              ${p.tag ? `<span class="item-tag">${esc(p.tag)}</span>` : ''}
+              ${p.read && p.readAt ? `<span class="item-tag">read on ${fmtDate(p.readAt)}</span>` : ''}
+            </div>
+            ${p.takeaway ? `<div class="md">${renderMd(p.takeaway)}</div>` : ''}
           </div>
-          ${p.note ? `<div class="item-note">${esc(p.note)}</div>` : ''}
-          <div class="item-actions"><button class="x" data-act="del-paper" data-id="${esc(p.id)}" title="remove">×</button></div>
+          <div class="item-actions">
+            <button data-act="edit-paper" data-id="${esc(p.id)}">edit</button>
+            <button class="x" data-act="del-paper" data-id="${esc(p.id)}" title="remove">×</button>
+          </div>
         </li>
       `).join('');
     }
+    const all = store.papers.length;
+    const toRead = store.papers.filter(p => !p.read).length;
+    const read = store.papers.filter(p => p.read).length;
+    const starred = store.papers.filter(p => p.starred).length;
+    document.querySelectorAll('#p-filters a').forEach(a => {
+      const f = a.dataset.filter;
+      const n = f === 'all' ? all : (f === 'to-read' ? toRead : (f === 'read' ? read : starred));
+      a.textContent = `${f} (${n})`;
+    });
     updateCount();
   }
-  function addPaper() {
+
+  function startEditPaper(id) {
+    const p = store.papers.find(x => x.id === id);
+    if (!p) return;
+    editingPaperId = id;
+    $('p-title').value = p.title || '';
+    $('p-url').value = p.url || '';
+    $('p-tag').value = p.tag || '';
+    $('p-takeaway').value = p.takeaway || '';
+    autosize($('p-takeaway'));
+    $('p-banner').style.display = '';
+    $('p-add').textContent = 'Save';
+    $('p-title').focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function cancelEditPaper() {
+    editingPaperId = null;
+    ['p-title','p-url','p-tag','p-takeaway'].forEach(id => $(id).value = '');
+    autosize($('p-takeaway'));
+    $('p-banner').style.display = 'none';
+    $('p-add').textContent = 'Add';
+  }
+  function submitPaper() {
     const title = $('p-title').value.trim();
     const url = normalizeUrl($('p-url').value.trim());
     if (!title) { $('p-title').focus(); return; }
     if (!url) { $('p-url').focus(); return; }
-    store.papers.unshift({
-      id: uid(), title, url,
-      tag: $('p-tag').value.trim(),
-      note: $('p-note').value.trim(),
-      addedAt: Date.now()
-    });
+    const tag = $('p-tag').value.trim();
+    const takeaway = $('p-takeaway').value.trim();
+    if (editingPaperId) {
+      const p = store.papers.find(x => x.id === editingPaperId);
+      if (p) { p.title = title; p.url = url; p.tag = tag; p.takeaway = takeaway; }
+      cancelEditPaper();
+    } else {
+      store.papers.unshift({
+        id: uid(), title, url, tag, takeaway,
+        read: false, readAt: null, starred: false,
+        addedAt: Date.now()
+      });
+      ['p-title','p-url','p-tag','p-takeaway'].forEach(id => $(id).value = '');
+      autosize($('p-takeaway'));
+    }
     persist('papers');
-    ['p-title','p-url','p-tag','p-note'].forEach(id => $(id).value = '');
-    autosize($('p-note'));
     $('p-title').focus();
     renderPapers();
   }
-  $('p-add').addEventListener('click', addPaper);
-  bindEnter(['p-title','p-url','p-tag','p-note'], addPaper, 'p-note');
-  $('p-note').addEventListener('input', () => autosize($('p-note')));
+  $('p-add').addEventListener('click', submitPaper);
+  $('p-cancel').addEventListener('click', cancelEditPaper);
+  bindEnter(['p-title','p-url','p-tag','p-takeaway'], submitPaper, 'p-takeaway');
+  $('p-takeaway').addEventListener('input', () => autosize($('p-takeaway')));
   $('p-search').addEventListener('input', renderPapers);
+  document.querySelectorAll('#p-filters a').forEach(a => {
+    a.addEventListener('click', () => {
+      paperFilter = a.dataset.filter;
+      document.querySelectorAll('#p-filters a').forEach(x => x.classList.toggle('active', x === a));
+      renderPapers();
+    });
+  });
   $('p-list').addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-act="del-paper"]');
-    if (!btn) return;
-    if (confirm('remove this paper?')) {
-      store.papers = store.papers.filter(p => p.id !== btn.dataset.id);
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
+    const id = el.dataset.id;
+    const p = store.papers.find(x => x.id === id);
+    if (!p) return;
+    if (el.dataset.act === 'toggle-read') {
+      p.read = !p.read;
+      p.readAt = p.read ? Date.now() : null;
       persist('papers');
       renderPapers();
+    } else if (el.dataset.act === 'toggle-star') {
+      p.starred = !p.starred;
+      persist('papers');
+      renderPapers();
+    } else if (el.dataset.act === 'edit-paper') {
+      startEditPaper(id);
+    } else if (el.dataset.act === 'del-paper') {
+      if (confirm('remove this paper?')) {
+        store.papers = store.papers.filter(x => x.id !== id);
+        if (editingPaperId === id) cancelEditPaper();
+        persist('papers');
+        renderPapers();
+      }
     }
   });
 
@@ -1533,6 +1695,20 @@ footer a:hover { color: var(--ink); }
     };
     reader.readAsText(file);
     e.target.value = '';
+  });
+
+  /* -------- theme -------- */
+  function applyTheme(theme) {
+    if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    else document.documentElement.removeAttribute('data-theme');
+    $('theme-toggle').textContent = theme === 'dark' ? 'light' : 'dark';
+  }
+  let currentTheme = localStorage.getItem('margin.theme') || 'light';
+  applyTheme(currentTheme);
+  $('theme-toggle').addEventListener('click', () => {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('margin.theme', currentTheme);
+    applyTheme(currentTheme);
   });
 
   /* -------- init -------- */
