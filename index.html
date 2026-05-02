@@ -290,6 +290,14 @@ a.item-title:hover { text-decoration: underline; text-underline-offset: 3px; tex
 .word-row.learned .word-text,
 .word-row.learned .word-meaning,
 .word-row.learned .word-example { color: var(--muted); }
+.word-meta {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+}
+.word-row .item-actions { opacity: 1; }
 .say {
   background: none;
   border: none;
@@ -764,6 +772,12 @@ footer a:hover { color: var(--ink); }
     if (!w.nextReview) return true;
     return w.nextReview <= Date.now();
   }
+  function dueLabel(w) {
+    if (w.learned) return 'learned';
+    if (!w.nextReview || w.nextReview <= Date.now()) return 'due now';
+    const days = Math.ceil((w.nextReview - Date.now()) / 86400000);
+    return days === 1 ? 'due in 1 day' : `due in ${days} days`;
+  }
   function dueCount() {
     return store.words.filter(isDue).length;
   }
@@ -793,6 +807,7 @@ footer a:hover { color: var(--ink); }
             <span class="word-text">${esc(w.word)}</span><button class="say" data-act="say-word" data-word="${esc(w.word)}" type="button">say</button>
             <span class="word-meaning">${esc(w.meaning)}</span>
             ${w.example ? `<span class="word-example">${esc(w.example)}</span>` : ''}
+            <span class="word-meta">${w.addedAt ? fmtDate(w.addedAt) + ' · ' : ''}${dueLabel(w)}</span>
           </div>
           <div class="item-actions"><button class="x" data-act="del-word" data-id="${esc(w.id)}" title="remove">×</button></div>
         </li>
