@@ -808,10 +808,11 @@ footer a:hover { color: var(--ink); }
     <h1 class="logo">em.</h1>
     <p class="tagline">Ezio's Margin · things I'd rather not forget</p>
     <nav class="nav">
-      <a data-nav="papers" href="#/papers">papers</a>
-      <a data-nav="notes"  href="#/notes">notes</a>
-      <a data-nav="words"  href="#/words">words</a>
-      <a data-nav="todos"  href="#/todos">todos</a>
+      <a data-nav="papers"  href="#/papers">papers</a>
+      <a data-nav="notes"   href="#/notes">notes</a>
+      <a data-nav="words"   href="#/words">words</a>
+      <a data-nav="todos"   href="#/todos">todos</a>
+      <a data-nav="fitness" href="#/fitness">fitness</a>
     </nav>
   </header>
 
@@ -966,6 +967,26 @@ footer a:hover { color: var(--ink); }
     <ul class="list" id="t-list"></ul>
   </section>
 
+  <!-- FITNESS -->
+  <section id="view-fitness" class="view">
+    <div class="calendar">
+      <div class="cal-header">
+        <button class="cal-nav" id="fcal-prev" type="button" title="previous month">‹</button>
+        <span class="cal-month" id="fcal-month"></span>
+        <button class="cal-nav" id="fcal-next" type="button" title="next month">›</button>
+      </div>
+      <div class="cal-grid" id="fcal-grid"></div>
+    </div>
+    <div class="todos-header">
+      <span class="todos-date" id="f-date-label">Today</span>
+      <span class="todos-stats" id="f-stats"></span>
+    </div>
+    <div class="todo-add">
+      <input id="f-input" placeholder="log an exercise… (⏎ to save)" autocomplete="off">
+    </div>
+    <ul class="list" id="f-list"></ul>
+  </section>
+
   <footer>
     <span id="count">—</span>
     <span><a id="export">export</a> · <a id="import">import</a> · <a id="theme-toggle">dark</a></span>
@@ -981,7 +1002,8 @@ footer a:hover { color: var(--ink); }
     papers: 'margin.papers.v1',
     notes: 'margin.notes.v1',
     words: 'margin.words.v1',
-    todos: 'margin.todos.v1'
+    todos: 'margin.todos.v1',
+    fitness: 'margin.fitness.v1'
   };
 
   const store = {};
@@ -1048,7 +1070,7 @@ footer a:hover { color: var(--ink); }
   function todayKey() { return dateKey(new Date()); }
 
   /* -------- routing -------- */
-  const sections = ['papers', 'notes', 'words', 'todos'];
+  const sections = ['papers', 'notes', 'words', 'todos', 'fitness'];
   function route() {
     const raw = location.hash.replace(/^#\/?/, '');
     const detailMatch = raw.match(/^papers\/(.+)$/);
@@ -1089,7 +1111,7 @@ footer a:hover { color: var(--ink); }
     const hash = raw || 'papers';
     const s = sections.includes(hash) ? hash : 'papers';
     const n = store[s].length;
-    const labels = { papers: 'paper', notes: 'note', words: 'word', todos: 'todo' };
+    const labels = { papers: 'paper', notes: 'note', words: 'word', todos: 'todo', fitness: 'workout' };
     $('count').textContent = `${n} ${labels[s]}${n === 1 ? '' : 's'}`;
   }
 
@@ -1880,6 +1902,162 @@ footer a:hover { color: var(--ink); }
     }
   });
 
+  /* -------- fitness (clone of todos with separate state/store) -------- */
+  let selectedFitnessDate = todayKey();
+  let fitnessCalendarMonth = new Date(); fitnessCalendarMonth.setDate(1);
+
+  function renderFitnessCalendar() {
+    const year = fitnessCalendarMonth.getFullYear();
+    const month = fitnessCalendarMonth.getMonth();
+    const firstDow = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthLast = new Date(year, month, 0).getDate();
+    const today = todayKey();
+
+    const tasksByDate = {};
+    for (const t of store.fitness) {
+      if (!t.date) continue;
+      if (!tasksByDate[t.date]) tasksByDate[t.date] = { total: 0, done: 0 };
+      tasksByDate[t.date].total++;
+      if (t.done) tasksByDate[t.date].done++;
+    }
+
+    let html = '';
+    for (const d of DOW_SHORT) html += `<div class="cal-dow">${d}</div>`;
+    function cell(y, m, d, isOther) {
+      const k = dateKey(new Date(y, m, d));
+      const t = tasksByDate[k];
+      let cls = 'cal-day';
+      if (isOther) cls += ' other';
+      if (k === today) cls += ' today';
+      if (k === selectedFitnessDate) cls += ' selected';
+      if (t && t.total > 0) {
+        cls += ' has-tasks';
+        if (t.done === t.total) cls += ' all-done';
+      }
+      return `<div class="${cls}" data-date="${k}">${d}</div>`;
+    }
+    for (let i = firstDow - 1; i >= 0; i--) html += cell(year, month - 1, prevMonthLast - i, true);
+    for (let d = 1; d <= daysInMonth; d++) html += cell(year, month, d, false);
+    const padEnd = (7 - ((firstDow + daysInMonth) % 7)) % 7;
+    for (let i = 1; i <= padEnd; i++) html += cell(year, month + 1, i, true);
+
+    $('fcal-grid').innerHTML = html;
+    $('fcal-month').textContent = `${MONTHS[month]} ${year}`;
+  }
+
+  function renderFitness() {
+    const day = store.fitness.filter(t => t.date === selectedFitnessDate);
+    day.sort((a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return (a.addedAt || 0) - (b.addedAt || 0);
+    });
+    const list = $('f-list');
+    if (day.length === 0) {
+      list.innerHTML = `<li class="empty">no workouts logged for this day.</li>`;
+    } else {
+      list.innerHTML = day.map(t => `
+        <li class="todo-row ${t.done ? 'done' : ''}">
+          <span class="todo-check" data-act="toggle-fit" data-id="${esc(t.id)}"></span>
+          <span class="todo-text" data-act="edit-fit" data-id="${esc(t.id)}">${esc(t.text)}</span>
+          <div class="item-actions"><button class="x" data-act="del-fit" data-id="${esc(t.id)}" title="remove">×</button></div>
+        </li>
+      `).join('');
+    }
+    const total = day.length;
+    const done = day.filter(t => t.done).length;
+    $('f-stats').textContent = total === 0 ? '' : `${done} of ${total} done`;
+
+    const today = todayKey();
+    let label;
+    if (selectedFitnessDate === today) {
+      label = 'Today';
+    } else {
+      const [y, m, d] = selectedFitnessDate.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      const diff = Math.round((dt - new Date(today + 'T00:00:00')) / 86400000);
+      const dow = DOW_SHORT[dt.getDay()];
+      const md = `${MONTHS[m-1]} ${d}`;
+      let suffix = '';
+      if (diff === -1) suffix = ' · yesterday';
+      else if (diff === 1) suffix = ' · tomorrow';
+      else if (diff < 0) suffix = ` · ${Math.abs(diff)} days ago`;
+      else if (diff > 0) suffix = ` · in ${diff} days`;
+      label = `${dow} · ${md}${suffix}`;
+    }
+    $('f-date-label').textContent = label;
+
+    renderFitnessCalendar();
+    updateCount();
+  }
+
+  function addFitness() {
+    const text = $('f-input').value.trim();
+    if (!text) return;
+    store.fitness.unshift({
+      id: uid(),
+      text,
+      date: selectedFitnessDate,
+      done: false,
+      doneAt: null,
+      addedAt: Date.now()
+    });
+    persist('fitness');
+    $('f-input').value = '';
+    renderFitness();
+  }
+
+  $('f-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); addFitness(); }
+  });
+  $('fcal-prev').addEventListener('click', () => {
+    fitnessCalendarMonth = new Date(fitnessCalendarMonth.getFullYear(), fitnessCalendarMonth.getMonth() - 1, 1);
+    renderFitnessCalendar();
+  });
+  $('fcal-next').addEventListener('click', () => {
+    fitnessCalendarMonth = new Date(fitnessCalendarMonth.getFullYear(), fitnessCalendarMonth.getMonth() + 1, 1);
+    renderFitnessCalendar();
+  });
+  $('fcal-grid').addEventListener('click', (e) => {
+    const cell = e.target.closest('.cal-day');
+    if (!cell || !cell.dataset.date) return;
+    selectedFitnessDate = cell.dataset.date;
+    const [y, m] = selectedFitnessDate.split('-').map(Number);
+    if (fitnessCalendarMonth.getMonth() !== (m - 1) || fitnessCalendarMonth.getFullYear() !== y) {
+      fitnessCalendarMonth = new Date(y, m - 1, 1);
+    }
+    renderFitness();
+  });
+  $('f-list').addEventListener('click', (e) => {
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
+    const id = el.dataset.id;
+    const t = store.fitness.find(x => x.id === id);
+    if (!t) return;
+    if (el.dataset.act === 'toggle-fit') {
+      t.done = !t.done;
+      t.doneAt = t.done ? Date.now() : null;
+      persist('fitness');
+      renderFitness();
+    } else if (el.dataset.act === 'edit-fit') {
+      const next = prompt('edit workout', t.text);
+      if (next !== null) {
+        const trimmed = next.trim();
+        if (trimmed) {
+          t.text = trimmed;
+          persist('fitness');
+          renderFitness();
+        }
+      }
+    } else if (el.dataset.act === 'del-fit') {
+      if (confirm('remove this workout?')) {
+        store.fitness = store.fitness.filter(x => x.id !== id);
+        persist('fitness');
+        renderFitness();
+      }
+    }
+  });
+
   /* -------- export / import -------- */
   $('export').addEventListener('click', () => {
     const payload = {
@@ -1887,6 +2065,7 @@ footer a:hover { color: var(--ink); }
       notes: store.notes,
       words: store.words,
       todos: store.todos,
+      fitness: store.fitness,
       exportedAt: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -1905,9 +2084,9 @@ footer a:hover { color: var(--ink); }
       try {
         const data = JSON.parse(reader.result);
         const incoming = Array.isArray(data)
-          ? { papers: data, notes: [], words: [], todos: [] }
-          : { papers: data.papers || [], notes: data.notes || [], words: data.words || [], todos: data.todos || [] };
-        for (const k of ['papers','notes','words','todos']) {
+          ? { papers: data, notes: [], words: [], todos: [], fitness: [] }
+          : { papers: data.papers || [], notes: data.notes || [], words: data.words || [], todos: data.todos || [], fitness: data.fitness || [] };
+        for (const k of ['papers','notes','words','todos','fitness']) {
           const ids = new Set(store[k].map(x => x.id));
           const merged = store[k].concat(incoming[k].filter(x => x && x.id && !ids.has(x.id)));
           merged.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
@@ -1918,6 +2097,7 @@ footer a:hover { color: var(--ink); }
         renderNotes();
         renderWords();
         renderTodos();
+        renderFitness();
         alert('imported.');
       } catch (err) {
         alert('import failed: ' + err.message);
@@ -1946,6 +2126,7 @@ footer a:hover { color: var(--ink); }
   renderNotes();
   renderWords();
   renderTodos();
+  renderFitness();
   route();
 })();
 </script>
