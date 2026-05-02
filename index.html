@@ -384,6 +384,126 @@ a.item-title:hover { text-decoration: underline; text-underline-offset: 3px; tex
 .paper-row.read .item-meta,
 .paper-row.read .md { color: var(--muted); }
 .paper-row.read .item-title { color: var(--muted); }
+.paper-check.checked {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.paper-check.checked::after {
+  content: "✓";
+  color: var(--bg);
+  font-size: 9px;
+  font-weight: 600;
+  position: absolute;
+  top: -1px;
+  left: 2px;
+  line-height: 14px;
+}
+.item-takeaway-link {
+  color: var(--muted);
+  text-decoration: none;
+  cursor: pointer;
+  font-style: italic;
+}
+.item-takeaway-link::before { content: "·"; margin-right: 12px; color: var(--muted); }
+.item-takeaway-link:hover { color: var(--ink); }
+/* paper detail view */
+.paper-detail { padding-top: 8px; }
+.back-link {
+  display: inline-block;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-style: italic;
+  margin-bottom: 36px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.back-link:hover { color: var(--ink); }
+.detail-fields { margin-bottom: 14px; }
+.detail-title-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  padding: 4px 0;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+.detail-url-input, .detail-tag-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+.detail-url-input { color: var(--soft); font-style: italic; }
+.detail-tag-input { color: var(--muted); }
+.detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+  margin: 16px 0 28px;
+  flex-wrap: wrap;
+}
+.detail-meta-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.detail-meta-toggle:hover { color: var(--ink); }
+.detail-meta .paper-check { margin-top: 0; }
+.detail-meta .paper-star {
+  font-size: 16px;
+  padding: 2px 4px;
+  vertical-align: middle;
+}
+.detail-section {
+  margin: 28px 0 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-style: normal;
+}
+.detail-takeaway {
+  width: 100%;
+  min-height: 50vh;
+  background: transparent;
+  border: 1px solid var(--line);
+  outline: none;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink);
+  padding: 16px 18px;
+  resize: vertical;
+}
+.detail-takeaway:focus { border-color: var(--muted); }
+.detail-takeaway::placeholder { color: var(--muted); font-style: italic; }
+.detail-foot {
+  margin-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.detail-saved { color: var(--muted); font-size: 12px; font-style: italic; }
 /* markdown rendering (notes) */
 .md {
   color: var(--soft);
@@ -698,7 +818,6 @@ footer a:hover { color: var(--ink); }
   <!-- PAPERS -->
   <section id="view-papers" class="view">
     <div class="add">
-      <div id="p-banner" class="editing-banner" style="display:none">editing — <a id="p-cancel" style="cursor:pointer;text-decoration:underline">cancel</a></div>
       <input id="p-title" placeholder="paper title" autocomplete="off">
       <input id="p-url" placeholder="link (https://…)" autocomplete="off">
       <input id="p-tag" placeholder="tag (optional)" autocomplete="off">
@@ -716,6 +835,30 @@ footer a:hover { color: var(--ink); }
     </div>
     <div class="search"><input id="p-search" placeholder="search…" autocomplete="off"></div>
     <ul class="list" id="p-list"></ul>
+  </section>
+
+  <!-- PAPER DETAIL -->
+  <section id="view-paper" class="view paper-detail">
+    <a class="back-link" id="pd-back" href="#/papers">← back to papers</a>
+    <div class="detail-fields">
+      <input id="pd-title" class="detail-title-input" placeholder="paper title" autocomplete="off">
+      <input id="pd-url" class="detail-url-input" placeholder="link" autocomplete="off">
+      <input id="pd-tag" class="detail-tag-input" placeholder="tag (optional)" autocomplete="off">
+    </div>
+    <div class="detail-meta">
+      <span class="detail-meta-toggle" id="pd-read-wrap" title="toggle read">
+        <span class="paper-check" id="pd-read"></span>
+        <span id="pd-read-label">to read</span>
+      </span>
+      <button class="paper-star" id="pd-star" type="button" title="star">☆</button>
+      <span id="pd-date"></span>
+    </div>
+    <div class="detail-section">what I learned</div>
+    <textarea id="pd-takeaway" class="detail-takeaway" placeholder="markdown supported · # header, **bold**, *italic*, - list, [link](url)…"></textarea>
+    <div class="detail-foot">
+      <span class="detail-saved" id="pd-saved"></span>
+      <button id="pd-delete" class="ghost" type="button">delete this paper</button>
+    </div>
   </section>
 
   <!-- NOTES -->
@@ -907,20 +1050,43 @@ footer a:hover { color: var(--ink); }
   /* -------- routing -------- */
   const sections = ['papers', 'notes', 'words', 'todos'];
   function route() {
-    const hash = (location.hash.replace(/^#\/?/, '') || 'papers');
+    const raw = location.hash.replace(/^#\/?/, '');
+    const detailMatch = raw.match(/^papers\/(.+)$/);
+
+    // leaving detail view: flush save and clear
+    if (currentDetailId && (!detailMatch || decodeURIComponent(detailMatch[1]) !== currentDetailId)) {
+      flushPdSave();
+      currentDetailId = null;
+      $('view-paper').classList.remove('active');
+      renderPapers();
+    }
+
+    if (detailMatch) {
+      showPaperDetail(decodeURIComponent(detailMatch[1]));
+      updateCount();
+      return;
+    }
+
+    const hash = raw || 'papers';
     const s = sections.includes(hash) ? hash : 'papers';
     sections.forEach(name => {
       $('view-' + name).classList.toggle('active', name === s);
       const link = document.querySelector(`[data-nav="${name}"]`);
       if (link) link.classList.toggle('active', name === s);
     });
+    $('view-paper').classList.remove('active');
     if (s !== 'words' && reviewMode) exitReview();
     updateCount();
   }
   window.addEventListener('hashchange', route);
 
   function updateCount() {
-    const hash = (location.hash.replace(/^#\/?/, '') || 'papers');
+    const raw = location.hash.replace(/^#\/?/, '');
+    if (raw.startsWith('papers/')) {
+      $('count').textContent = `editing paper`;
+      return;
+    }
+    const hash = raw || 'papers';
     const s = sections.includes(hash) ? hash : 'papers';
     const n = store[s].length;
     const labels = { papers: 'paper', notes: 'note', words: 'word', todos: 'todo' };
@@ -929,7 +1095,8 @@ footer a:hover { color: var(--ink); }
 
   /* -------- papers -------- */
   let paperFilter = 'all';
-  let editingPaperId = null;
+  let currentDetailId = null;
+  let pdSaveTimer = null;
 
   function migratePapers() {
     let dirty = false;
@@ -966,12 +1133,12 @@ footer a:hover { color: var(--ink); }
             <div class="item-meta">
               <span>${fmtDate(p.addedAt)}</span>
               ${p.tag ? `<span class="item-tag">${esc(p.tag)}</span>` : ''}
+              <a class="item-takeaway-link" href="#/papers/${encodeURIComponent(p.id)}">${p.takeaway ? 'takeaway' : '+ takeaway'}</a>
               ${p.read && p.readAt ? `<span class="item-tag">read on ${fmtDate(p.readAt)}</span>` : ''}
             </div>
             ${p.takeaway ? `<div class="md">${renderMd(p.takeaway)}</div>` : ''}
           </div>
           <div class="item-actions">
-            <button data-act="edit-paper" data-id="${esc(p.id)}">edit</button>
             <button class="x" data-act="del-paper" data-id="${esc(p.id)}" title="remove">×</button>
           </div>
         </li>
@@ -989,54 +1156,26 @@ footer a:hover { color: var(--ink); }
     updateCount();
   }
 
-  function startEditPaper(id) {
-    const p = store.papers.find(x => x.id === id);
-    if (!p) return;
-    editingPaperId = id;
-    $('p-title').value = p.title || '';
-    $('p-url').value = p.url || '';
-    $('p-tag').value = p.tag || '';
-    $('p-takeaway').value = p.takeaway || '';
-    autosize($('p-takeaway'));
-    $('p-banner').style.display = '';
-    $('p-add').textContent = 'Save';
-    $('p-title').focus();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  function cancelEditPaper() {
-    editingPaperId = null;
-    ['p-title','p-url','p-tag','p-takeaway'].forEach(id => $(id).value = '');
-    autosize($('p-takeaway'));
-    $('p-banner').style.display = 'none';
-    $('p-add').textContent = 'Add';
-  }
-  function submitPaper() {
+  function addPaper() {
     const title = $('p-title').value.trim();
     const url = normalizeUrl($('p-url').value.trim());
     if (!title) { $('p-title').focus(); return; }
     if (!url) { $('p-url').focus(); return; }
-    const tag = $('p-tag').value.trim();
-    const takeaway = $('p-takeaway').value.trim();
-    if (editingPaperId) {
-      const p = store.papers.find(x => x.id === editingPaperId);
-      if (p) { p.title = title; p.url = url; p.tag = tag; p.takeaway = takeaway; }
-      cancelEditPaper();
-    } else {
-      store.papers.unshift({
-        id: uid(), title, url, tag, takeaway,
-        read: false, readAt: null, starred: false,
-        addedAt: Date.now()
-      });
-      ['p-title','p-url','p-tag','p-takeaway'].forEach(id => $(id).value = '');
-      autosize($('p-takeaway'));
-    }
+    store.papers.unshift({
+      id: uid(), title, url,
+      tag: $('p-tag').value.trim(),
+      takeaway: $('p-takeaway').value.trim(),
+      read: false, readAt: null, starred: false,
+      addedAt: Date.now()
+    });
     persist('papers');
+    ['p-title','p-url','p-tag','p-takeaway'].forEach(id => $(id).value = '');
+    autosize($('p-takeaway'));
     $('p-title').focus();
     renderPapers();
   }
-  $('p-add').addEventListener('click', submitPaper);
-  $('p-cancel').addEventListener('click', cancelEditPaper);
-  bindEnter(['p-title','p-url','p-tag','p-takeaway'], submitPaper, 'p-takeaway');
+  $('p-add').addEventListener('click', addPaper);
+  bindEnter(['p-title','p-url','p-tag','p-takeaway'], addPaper, 'p-takeaway');
   $('p-takeaway').addEventListener('input', () => autosize($('p-takeaway')));
   $('p-search').addEventListener('input', renderPapers);
   document.querySelectorAll('#p-filters a').forEach(a => {
@@ -1061,16 +1200,99 @@ footer a:hover { color: var(--ink); }
       p.starred = !p.starred;
       persist('papers');
       renderPapers();
-    } else if (el.dataset.act === 'edit-paper') {
-      startEditPaper(id);
     } else if (el.dataset.act === 'del-paper') {
       if (confirm('remove this paper?')) {
         store.papers = store.papers.filter(x => x.id !== id);
-        if (editingPaperId === id) cancelEditPaper();
         persist('papers');
         renderPapers();
       }
     }
+  });
+
+  /* -------- paper detail -------- */
+  function showPaperDetail(id) {
+    const p = store.papers.find(x => x.id === id);
+    if (!p) { location.hash = '#/papers'; return; }
+    sections.forEach(name => $('view-' + name).classList.remove('active'));
+    $('view-paper').classList.add('active');
+    document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+    const navLink = document.querySelector('[data-nav="papers"]');
+    if (navLink) navLink.classList.add('active');
+    if (reviewMode) exitReview();
+
+    currentDetailId = id;
+    $('pd-title').value = p.title || '';
+    $('pd-url').value = p.url || '';
+    $('pd-tag').value = p.tag || '';
+    $('pd-takeaway').value = p.takeaway || '';
+    $('pd-date').textContent = `added ${fmtDate(p.addedAt)}`;
+    updateDetailToggles();
+    $('pd-saved').textContent = '';
+    $('pd-takeaway').focus();
+    $('pd-takeaway').setSelectionRange($('pd-takeaway').value.length, $('pd-takeaway').value.length);
+  }
+  function updateDetailToggles() {
+    if (!currentDetailId) return;
+    const p = store.papers.find(x => x.id === currentDetailId);
+    if (!p) return;
+    $('pd-read').classList.toggle('checked', !!p.read);
+    $('pd-read-label').textContent = p.read
+      ? (p.readAt ? `read on ${fmtDate(p.readAt)}` : 'read')
+      : 'to read';
+    $('pd-star').classList.toggle('on', !!p.starred);
+    $('pd-star').textContent = p.starred ? '★' : '☆';
+    $('pd-star').title = p.starred ? 'unstar' : 'star';
+  }
+  function savePaperDetailNow() {
+    if (!currentDetailId) return;
+    const p = store.papers.find(x => x.id === currentDetailId);
+    if (!p) return;
+    const title = $('pd-title').value.trim();
+    const url = normalizeUrl($('pd-url').value.trim());
+    p.title = title;
+    p.url = url;
+    p.tag = $('pd-tag').value.trim();
+    p.takeaway = $('pd-takeaway').value;
+    persist('papers');
+    $('pd-saved').textContent = 'saved';
+    setTimeout(() => {
+      if ($('pd-saved').textContent === 'saved') $('pd-saved').textContent = '';
+    }, 1800);
+  }
+  function schedulePdSave() {
+    clearTimeout(pdSaveTimer);
+    $('pd-saved').textContent = '';
+    pdSaveTimer = setTimeout(savePaperDetailNow, 400);
+  }
+  function flushPdSave() {
+    clearTimeout(pdSaveTimer);
+    if (currentDetailId) savePaperDetailNow();
+  }
+  ['pd-title','pd-url','pd-tag','pd-takeaway'].forEach(id => {
+    $(id).addEventListener('input', schedulePdSave);
+    $(id).addEventListener('blur', flushPdSave);
+  });
+  $('pd-read-wrap').addEventListener('click', () => {
+    const p = store.papers.find(x => x.id === currentDetailId);
+    if (!p) return;
+    p.read = !p.read;
+    p.readAt = p.read ? Date.now() : null;
+    persist('papers');
+    updateDetailToggles();
+  });
+  $('pd-star').addEventListener('click', () => {
+    const p = store.papers.find(x => x.id === currentDetailId);
+    if (!p) return;
+    p.starred = !p.starred;
+    persist('papers');
+    updateDetailToggles();
+  });
+  $('pd-delete').addEventListener('click', () => {
+    if (!confirm('remove this paper?')) return;
+    store.papers = store.papers.filter(x => x.id !== currentDetailId);
+    persist('papers');
+    currentDetailId = null;
+    location.hash = '#/papers';
   });
 
   /* -------- notes -------- */
@@ -1475,6 +1697,14 @@ footer a:hover { color: var(--ink); }
       else if (e.key === '2' || e.key.toLowerCase() === 'k') gradeCard('got');
     }
     if (e.key === 'Escape') exitReview();
+  });
+  // esc in paper detail: save + go back
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!currentDetailId) return;
+    e.preventDefault();
+    flushPdSave();
+    location.hash = '#/papers';
   });
 
   /* -------- todos -------- */
