@@ -10,6 +10,7 @@
   --ink: #111;
   --muted: #8a8a86;
   --line: #e5e2da;
+  --soft: #444;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
@@ -27,7 +28,7 @@ body {
   margin: 0 auto;
   padding: 96px 32px 160px;
 }
-header { margin-bottom: 64px; }
+header { margin-bottom: 56px; }
 .logo {
   font-size: 32px;
   font-weight: 500;
@@ -40,9 +41,32 @@ header { margin-bottom: 64px; }
   font-style: italic;
   font-size: 14px;
 }
+.nav {
+  display: flex;
+  gap: 24px;
+  margin-top: 32px;
+  font-size: 14px;
+  font-style: italic;
+}
+.nav a {
+  color: var(--muted);
+  text-decoration: none;
+  padding-bottom: 4px;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.nav a:hover { color: var(--ink); }
+.nav a.active {
+  color: var(--ink);
+  font-style: normal;
+  border-bottom-color: var(--ink);
+}
+.view { display: none; }
+.view.active { display: block; }
 .add {
-  margin-bottom: 48px;
-  padding-bottom: 32px;
+  margin-bottom: 40px;
+  padding-bottom: 28px;
   border-bottom: 1px solid var(--line);
 }
 .add input, .add textarea {
@@ -68,6 +92,8 @@ header { margin-bottom: 64px; }
   align-items: center;
   justify-content: space-between;
   margin-top: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 .hint { color: var(--muted); font-size: 12px; font-style: italic; }
 button {
@@ -83,6 +109,32 @@ button {
   transition: all 0.15s;
 }
 button:hover { background: var(--ink); color: var(--bg); }
+button.ghost {
+  border-color: var(--line);
+  color: var(--muted);
+}
+button.ghost:hover { background: transparent; color: var(--ink); border-color: var(--ink); }
+.filters {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  font-style: italic;
+  margin-bottom: 12px;
+  color: var(--muted);
+}
+.filters a {
+  color: var(--muted);
+  text-decoration: none;
+  cursor: pointer;
+  padding-bottom: 2px;
+  border-bottom: 1px solid transparent;
+}
+.filters a.active {
+  color: var(--ink);
+  font-style: normal;
+  border-bottom-color: var(--ink);
+}
+.filters a:hover { color: var(--ink); }
 .search { margin-bottom: 8px; }
 .search input {
   width: 100%;
@@ -109,8 +161,9 @@ button:hover { background: var(--ink); color: var(--bg); }
   font-size: 18px;
   line-height: 1.4;
   margin-bottom: 6px;
+  cursor: pointer;
 }
-.item-title:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a.item-title:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .item-meta {
   display: flex;
   gap: 12px;
@@ -119,35 +172,105 @@ button:hover { background: var(--ink); color: var(--bg); }
   font-style: italic;
 }
 .item-tag::before { content: "·"; margin-right: 12px; }
-.item-note {
+.item-body, .item-note {
   margin-top: 8px;
-  color: #444;
+  color: var(--soft);
   font-size: 14px;
   line-height: 1.6;
   white-space: pre-wrap;
 }
-.item-delete {
+.item-actions {
   position: absolute;
   top: 20px;
   right: 0;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.item:hover .item-actions { opacity: 1; }
+.item-actions button {
   background: none;
   border: none;
   color: var(--muted);
-  font-size: 20px;
-  line-height: 1;
+  font-family: inherit;
+  font-size: 12px;
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
   padding: 4px 6px;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s, color 0.15s;
 }
-.item:hover .item-delete { opacity: 1; }
-.item-delete:hover { color: var(--ink); background: none; }
+.item-actions button:hover { color: var(--ink); background: none; }
+.item-actions .x { font-size: 18px; line-height: 1; font-style: normal; }
 .empty {
   color: var(--muted);
   font-style: italic;
   text-align: center;
   padding: 64px 0;
   list-style: none;
+}
+/* words section */
+.word-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 16px 60px 16px 0;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.word-check {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--muted);
+  border-radius: 2px;
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 4px;
+  position: relative;
+  transition: all 0.15s;
+}
+.word-check:hover { border-color: var(--ink); }
+.word-row.learned .word-check {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.word-row.learned .word-check::after {
+  content: "✓";
+  color: var(--bg);
+  font-size: 11px;
+  position: absolute;
+  top: -2px;
+  left: 2px;
+}
+.word-main { flex: 1; min-width: 0; }
+.word-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-right: 10px;
+}
+.word-meaning {
+  color: var(--soft);
+  font-size: 15px;
+}
+.word-example {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}
+.word-row.learned .word-text,
+.word-row.learned .word-meaning,
+.word-row.learned .word-example { color: var(--muted); }
+.editing-banner {
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+  margin-bottom: 8px;
 }
 footer {
   margin-top: 64px;
@@ -158,11 +281,15 @@ footer {
   color: var(--muted);
   font-size: 12px;
   font-style: italic;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 footer a { color: var(--muted); cursor: pointer; text-decoration: none; }
 footer a:hover { color: var(--ink); }
 @media (max-width: 600px) {
   .wrap { padding: 56px 24px 120px; }
+  .nav { gap: 18px; }
+  .item-actions { opacity: 1; }
 }
 </style>
 </head>
@@ -170,28 +297,68 @@ footer a:hover { color: var(--ink); }
 <div class="wrap">
   <header>
     <h1 class="logo">em.</h1>
-    <p class="tagline">Ezio's Margin · a place for papers I don't want to forget</p>
+    <p class="tagline">Ezio's Margin · things I'd rather not forget</p>
+    <nav class="nav">
+      <a data-nav="papers" href="#/papers">papers</a>
+      <a data-nav="notes"  href="#/notes">notes</a>
+      <a data-nav="words"  href="#/words">words</a>
+    </nav>
   </header>
 
-  <section class="add">
-    <input id="f-title" placeholder="paper title" autocomplete="off">
-    <input id="f-url" placeholder="link (https://…)" autocomplete="off">
-    <input id="f-tag" placeholder="tag (optional)" autocomplete="off">
-    <textarea id="f-note" placeholder="why it matters (optional)" rows="1"></textarea>
-    <div class="actions">
-      <span class="hint">⏎ to save · shift+⏎ for newline</span>
-      <button id="add-btn">Add</button>
+  <!-- PAPERS -->
+  <section id="view-papers" class="view">
+    <div class="add">
+      <input id="p-title" placeholder="paper title" autocomplete="off">
+      <input id="p-url" placeholder="link (https://…)" autocomplete="off">
+      <input id="p-tag" placeholder="tag (optional)" autocomplete="off">
+      <textarea id="p-note" placeholder="why it matters (optional)" rows="1"></textarea>
+      <div class="actions">
+        <span class="hint">⏎ to save · shift+⏎ for newline</span>
+        <button id="p-add">Add</button>
+      </div>
     </div>
+    <div class="search"><input id="p-search" placeholder="search…" autocomplete="off"></div>
+    <ul class="list" id="p-list"></ul>
   </section>
 
-  <div class="search">
-    <input id="search" placeholder="search…" autocomplete="off">
-  </div>
+  <!-- NOTES -->
+  <section id="view-notes" class="view">
+    <div class="add">
+      <div id="n-banner" class="editing-banner" style="display:none">editing — <a id="n-cancel" style="cursor:pointer;text-decoration:underline">cancel</a></div>
+      <input id="n-title" placeholder="note title" autocomplete="off">
+      <input id="n-tag" placeholder="tag (optional)" autocomplete="off">
+      <textarea id="n-body" placeholder="write…" rows="3"></textarea>
+      <div class="actions">
+        <span class="hint">⏎ to save · shift+⏎ for newline in body</span>
+        <button id="n-add">Add</button>
+      </div>
+    </div>
+    <div class="search"><input id="n-search" placeholder="search…" autocomplete="off"></div>
+    <ul class="list" id="n-list"></ul>
+  </section>
 
-  <ul class="list" id="list"></ul>
+  <!-- WORDS -->
+  <section id="view-words" class="view">
+    <div class="add">
+      <input id="w-word" placeholder="word" autocomplete="off">
+      <input id="w-meaning" placeholder="meaning" autocomplete="off">
+      <textarea id="w-example" placeholder="example sentence (optional)" rows="1"></textarea>
+      <div class="actions">
+        <span class="hint">⏎ to save</span>
+        <button id="w-add">Add</button>
+      </div>
+    </div>
+    <div class="filters">
+      <a data-filter="all" class="active">all</a>
+      <a data-filter="learning">learning</a>
+      <a data-filter="learned">learned</a>
+    </div>
+    <div class="search"><input id="w-search" placeholder="search…" autocomplete="off"></div>
+    <ul class="list" id="w-list"></ul>
+  </section>
 
   <footer>
-    <span id="count">0 papers</span>
+    <span id="count">—</span>
     <span><a id="export">export</a> · <a id="import">import</a></span>
   </footer>
 </div>
@@ -200,16 +367,23 @@ footer a:hover { color: var(--ink); }
 
 <script>
 (function () {
-  const KEY = 'margin.papers.v1';
   const $ = (id) => document.getElementById(id);
-  let papers = load();
+  const KEYS = {
+    papers: 'margin.papers.v1',
+    notes: 'margin.notes.v1',
+    words: 'margin.words.v1'
+  };
 
-  function load() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
-    catch (e) { return []; }
+  const store = {};
+  for (const k in KEYS) {
+    try { store[k] = JSON.parse(localStorage.getItem(KEYS[k]) || '[]'); }
+    catch (e) { store[k] = []; }
   }
-  function save() { localStorage.setItem(KEY, JSON.stringify(papers)); }
+  function persist(k) { localStorage.setItem(KEYS[k], JSON.stringify(store[k])); }
 
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
   function fmtDate(ts) {
     const d = new Date(ts);
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -224,23 +398,52 @@ footer a:hover { color: var(--ink); }
     if (!/^https?:\/\//i.test(u)) return 'https://' + u;
     return u;
   }
-
-  function autosizeNote() {
-    const t = $('f-note');
-    t.style.height = 'auto';
-    t.style.height = t.scrollHeight + 'px';
+  function autosize(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+  function bindEnter(ids, submitFn, multilineId) {
+    ids.forEach(id => {
+      $(id).addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        if (id === multilineId && e.shiftKey) return;
+        e.preventDefault();
+        submitFn();
+      });
+    });
   }
 
-  function render() {
-    const q = $('search').value.trim().toLowerCase();
-    const filtered = papers.filter(p => {
-      if (!q) return true;
-      return ((p.title || '') + ' ' + (p.tag || '') + ' ' + (p.note || ''))
-        .toLowerCase().includes(q);
+  /* -------- routing -------- */
+  const sections = ['papers', 'notes', 'words'];
+  function route() {
+    const hash = (location.hash.replace(/^#\/?/, '') || 'papers');
+    const s = sections.includes(hash) ? hash : 'papers';
+    sections.forEach(name => {
+      $('view-' + name).classList.toggle('active', name === s);
+      const link = document.querySelector(`[data-nav="${name}"]`);
+      if (link) link.classList.toggle('active', name === s);
     });
-    const list = $('list');
+    updateCount();
+  }
+  window.addEventListener('hashchange', route);
+
+  function updateCount() {
+    const hash = (location.hash.replace(/^#\/?/, '') || 'papers');
+    const s = sections.includes(hash) ? hash : 'papers';
+    const n = store[s].length;
+    const labels = { papers: 'paper', notes: 'note', words: 'word' };
+    $('count').textContent = `${n} ${labels[s]}${n === 1 ? '' : 's'}`;
+  }
+
+  /* -------- papers -------- */
+  function renderPapers() {
+    const q = $('p-search').value.trim().toLowerCase();
+    const filtered = store.papers.filter(p =>
+      !q || ((p.title || '') + ' ' + (p.tag || '') + ' ' + (p.note || '')).toLowerCase().includes(q)
+    );
+    const list = $('p-list');
     if (filtered.length === 0) {
-      list.innerHTML = `<li class="empty">${papers.length === 0 ? 'no papers yet.' : 'nothing matches.'}</li>`;
+      list.innerHTML = `<li class="empty">${store.papers.length === 0 ? 'no papers yet.' : 'nothing matches.'}</li>`;
     } else {
       list.innerHTML = filtered.map(p => `
         <li class="item">
@@ -250,67 +453,233 @@ footer a:hover { color: var(--ink); }
             ${p.tag ? `<span class="item-tag">${esc(p.tag)}</span>` : ''}
           </div>
           ${p.note ? `<div class="item-note">${esc(p.note)}</div>` : ''}
-          <button class="item-delete" data-id="${esc(p.id)}" title="remove">×</button>
+          <div class="item-actions"><button class="x" data-act="del-paper" data-id="${esc(p.id)}" title="remove">×</button></div>
         </li>
       `).join('');
     }
-    $('count').textContent = `${papers.length} paper${papers.length === 1 ? '' : 's'}`;
+    updateCount();
   }
-
-  function add() {
-    const title = $('f-title').value.trim();
-    const url = normalizeUrl($('f-url').value.trim());
-    if (!title) { $('f-title').focus(); return; }
-    if (!url) { $('f-url').focus(); return; }
-    papers.unshift({
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      title,
-      url,
-      tag: $('f-tag').value.trim(),
-      note: $('f-note').value.trim(),
+  function addPaper() {
+    const title = $('p-title').value.trim();
+    const url = normalizeUrl($('p-url').value.trim());
+    if (!title) { $('p-title').focus(); return; }
+    if (!url) { $('p-url').focus(); return; }
+    store.papers.unshift({
+      id: uid(), title, url,
+      tag: $('p-tag').value.trim(),
+      note: $('p-note').value.trim(),
       addedAt: Date.now()
     });
-    save();
-    ['f-title','f-url','f-tag','f-note'].forEach(id => $(id).value = '');
-    autosizeNote();
-    $('f-title').focus();
-    render();
+    persist('papers');
+    ['p-title','p-url','p-tag','p-note'].forEach(id => $(id).value = '');
+    autosize($('p-note'));
+    $('p-title').focus();
+    renderPapers();
   }
-
-  $('add-btn').addEventListener('click', add);
-
-  ['f-title','f-url','f-tag','f-note'].forEach(id => {
-    $(id).addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter') return;
-      if (id === 'f-note' && e.shiftKey) return;
-      e.preventDefault();
-      add();
-    });
-  });
-  $('f-note').addEventListener('input', autosizeNote);
-
-  $('search').addEventListener('input', render);
-
-  $('list').addEventListener('click', (e) => {
-    const btn = e.target.closest('.item-delete');
+  $('p-add').addEventListener('click', addPaper);
+  bindEnter(['p-title','p-url','p-tag','p-note'], addPaper, 'p-note');
+  $('p-note').addEventListener('input', () => autosize($('p-note')));
+  $('p-search').addEventListener('input', renderPapers);
+  $('p-list').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-act="del-paper"]');
     if (!btn) return;
-    const id = btn.dataset.id;
     if (confirm('remove this paper?')) {
-      papers = papers.filter(p => p.id !== id);
-      save();
-      render();
+      store.papers = store.papers.filter(p => p.id !== btn.dataset.id);
+      persist('papers');
+      renderPapers();
     }
   });
 
+  /* -------- notes -------- */
+  let editingNoteId = null;
+  function renderNotes() {
+    const q = $('n-search').value.trim().toLowerCase();
+    const filtered = store.notes.filter(n =>
+      !q || ((n.title || '') + ' ' + (n.tag || '') + ' ' + (n.body || '')).toLowerCase().includes(q)
+    );
+    const list = $('n-list');
+    if (filtered.length === 0) {
+      list.innerHTML = `<li class="empty">${store.notes.length === 0 ? 'no notes yet.' : 'nothing matches.'}</li>`;
+    } else {
+      list.innerHTML = filtered.map(n => `
+        <li class="item">
+          <span class="item-title">${esc(n.title)}</span>
+          <div class="item-meta">
+            <span>${fmtDate(n.updatedAt || n.addedAt)}${n.updatedAt && n.updatedAt !== n.addedAt ? ' (edited)' : ''}</span>
+            ${n.tag ? `<span class="item-tag">${esc(n.tag)}</span>` : ''}
+          </div>
+          ${n.body ? `<div class="item-body">${esc(n.body)}</div>` : ''}
+          <div class="item-actions">
+            <button data-act="edit-note" data-id="${esc(n.id)}">edit</button>
+            <button class="x" data-act="del-note" data-id="${esc(n.id)}" title="remove">×</button>
+          </div>
+        </li>
+      `).join('');
+    }
+    updateCount();
+  }
+  function startEditNote(id) {
+    const n = store.notes.find(x => x.id === id);
+    if (!n) return;
+    editingNoteId = id;
+    $('n-title').value = n.title || '';
+    $('n-tag').value = n.tag || '';
+    $('n-body').value = n.body || '';
+    autosize($('n-body'));
+    $('n-banner').style.display = '';
+    $('n-add').textContent = 'Save';
+    $('n-title').focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function cancelEditNote() {
+    editingNoteId = null;
+    ['n-title','n-tag','n-body'].forEach(id => $(id).value = '');
+    autosize($('n-body'));
+    $('n-banner').style.display = 'none';
+    $('n-add').textContent = 'Add';
+  }
+  function submitNote() {
+    const title = $('n-title').value.trim();
+    const body = $('n-body').value.trim();
+    if (!title && !body) { $('n-title').focus(); return; }
+    const tag = $('n-tag').value.trim();
+    if (editingNoteId) {
+      const n = store.notes.find(x => x.id === editingNoteId);
+      if (n) {
+        n.title = title;
+        n.tag = tag;
+        n.body = body;
+        n.updatedAt = Date.now();
+      }
+      cancelEditNote();
+    } else {
+      store.notes.unshift({
+        id: uid(), title, tag, body,
+        addedAt: Date.now(), updatedAt: Date.now()
+      });
+      ['n-title','n-tag','n-body'].forEach(id => $(id).value = '');
+      autosize($('n-body'));
+    }
+    persist('notes');
+    $('n-title').focus();
+    renderNotes();
+  }
+  $('n-add').addEventListener('click', submitNote);
+  $('n-cancel').addEventListener('click', cancelEditNote);
+  bindEnter(['n-title','n-tag','n-body'], submitNote, 'n-body');
+  $('n-body').addEventListener('input', () => autosize($('n-body')));
+  $('n-search').addEventListener('input', renderNotes);
+  $('n-list').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (btn.dataset.act === 'edit-note') startEditNote(id);
+    else if (btn.dataset.act === 'del-note') {
+      if (confirm('remove this note?')) {
+        store.notes = store.notes.filter(n => n.id !== id);
+        if (editingNoteId === id) cancelEditNote();
+        persist('notes');
+        renderNotes();
+      }
+    }
+  });
+
+  /* -------- words -------- */
+  let wordFilter = 'all';
+  function renderWords() {
+    const q = $('w-search').value.trim().toLowerCase();
+    const filtered = store.words.filter(w => {
+      if (wordFilter === 'learning' && w.learned) return false;
+      if (wordFilter === 'learned' && !w.learned) return false;
+      if (q && !((w.word || '') + ' ' + (w.meaning || '') + ' ' + (w.example || '')).toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const list = $('w-list');
+    if (filtered.length === 0) {
+      list.innerHTML = `<li class="empty">${store.words.length === 0 ? 'no words yet.' : 'nothing matches.'}</li>`;
+    } else {
+      list.innerHTML = filtered.map(w => `
+        <li class="word-row ${w.learned ? 'learned' : ''}">
+          <span class="word-check" data-act="toggle-word" data-id="${esc(w.id)}" title="${w.learned ? 'mark as learning' : 'mark as learned'}"></span>
+          <div class="word-main">
+            <span class="word-text">${esc(w.word)}</span>
+            <span class="word-meaning">${esc(w.meaning)}</span>
+            ${w.example ? `<span class="word-example">${esc(w.example)}</span>` : ''}
+          </div>
+          <div class="item-actions"><button class="x" data-act="del-word" data-id="${esc(w.id)}" title="remove">×</button></div>
+        </li>
+      `).join('');
+    }
+    // update filter counts
+    const all = store.words.length;
+    const learned = store.words.filter(w => w.learned).length;
+    const learning = all - learned;
+    document.querySelectorAll('.filters a').forEach(a => {
+      const f = a.dataset.filter;
+      const n = f === 'all' ? all : (f === 'learning' ? learning : learned);
+      a.textContent = `${f} (${n})`;
+    });
+    updateCount();
+  }
+  function addWord() {
+    const word = $('w-word').value.trim();
+    const meaning = $('w-meaning').value.trim();
+    if (!word) { $('w-word').focus(); return; }
+    if (!meaning) { $('w-meaning').focus(); return; }
+    store.words.unshift({
+      id: uid(), word, meaning,
+      example: $('w-example').value.trim(),
+      learned: false,
+      addedAt: Date.now()
+    });
+    persist('words');
+    ['w-word','w-meaning','w-example'].forEach(id => $(id).value = '');
+    autosize($('w-example'));
+    $('w-word').focus();
+    renderWords();
+  }
+  $('w-add').addEventListener('click', addWord);
+  bindEnter(['w-word','w-meaning','w-example'], addWord, 'w-example');
+  $('w-example').addEventListener('input', () => autosize($('w-example')));
+  $('w-search').addEventListener('input', renderWords);
+  document.querySelectorAll('.filters a').forEach(a => {
+    a.addEventListener('click', () => {
+      wordFilter = a.dataset.filter;
+      document.querySelectorAll('.filters a').forEach(x => x.classList.toggle('active', x === a));
+      renderWords();
+    });
+  });
+  $('w-list').addEventListener('click', (e) => {
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
+    const id = el.dataset.id;
+    if (el.dataset.act === 'toggle-word') {
+      const w = store.words.find(x => x.id === id);
+      if (w) { w.learned = !w.learned; persist('words'); renderWords(); }
+    } else if (el.dataset.act === 'del-word') {
+      if (confirm('remove this word?')) {
+        store.words = store.words.filter(w => w.id !== id);
+        persist('words');
+        renderWords();
+      }
+    }
+  });
+
+  /* -------- export / import -------- */
   $('export').addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(papers, null, 2)], { type: 'application/json' });
+    const payload = {
+      papers: store.papers,
+      notes: store.notes,
+      words: store.words,
+      exportedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `margin-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
   });
-
   $('import').addEventListener('click', () => $('import-file').click());
   $('import-file').addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -318,14 +687,22 @@ footer a:hover { color: var(--ink); }
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        const incoming = JSON.parse(reader.result);
-        if (!Array.isArray(incoming)) throw new Error('not an array');
-        const ids = new Set(papers.map(p => p.id));
-        const merged = papers.concat(incoming.filter(p => p && p.id && !ids.has(p.id)));
-        merged.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
-        papers = merged;
-        save();
-        render();
+        const data = JSON.parse(reader.result);
+        // backward-compat: array means old papers-only export
+        const incoming = Array.isArray(data)
+          ? { papers: data, notes: [], words: [] }
+          : { papers: data.papers || [], notes: data.notes || [], words: data.words || [] };
+        for (const k of ['papers','notes','words']) {
+          const ids = new Set(store[k].map(x => x.id));
+          const merged = store[k].concat(incoming[k].filter(x => x && x.id && !ids.has(x.id)));
+          merged.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+          store[k] = merged;
+          persist(k);
+        }
+        renderPapers();
+        renderNotes();
+        renderWords();
+        alert('imported.');
       } catch (err) {
         alert('import failed: ' + err.message);
       }
@@ -334,7 +711,11 @@ footer a:hover { color: var(--ink); }
     e.target.value = '';
   });
 
-  render();
+  /* -------- init -------- */
+  renderPapers();
+  renderNotes();
+  renderWords();
+  route();
 })();
 </script>
 </body>
