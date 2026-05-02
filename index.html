@@ -1526,6 +1526,12 @@ footer a:hover { color: var(--ink); }
   });
 
   /* -------- fetch definition -------- */
+  const POS_SHORT = {
+    noun: 'n.', verb: 'v.', adjective: 'adj.', adverb: 'adv.',
+    pronoun: 'pron.', preposition: 'prep.', conjunction: 'conj.',
+    interjection: 'interj.', determiner: 'det.', article: 'art.',
+    auxiliary: 'aux.', exclamation: 'excl.'
+  };
   $('w-fetch').addEventListener('click', async () => {
     const word = $('w-word').value.trim();
     if (!word) { $('w-word').focus(); return; }
@@ -1538,15 +1544,28 @@ footer a:hover { color: var(--ink); }
       if (r.status === 404) throw new Error('word not found');
       if (!r.ok) throw new Error('fetch failed (' + r.status + ')');
       const data = await r.json();
-      const meaning = data[0]?.meanings?.[0];
-      const def = meaning?.definitions?.[0];
-      if (!def) throw new Error('no definition');
-      const pos = meaning.partOfSpeech ? meaning.partOfSpeech + '. ' : '';
-      if (!$('w-meaning').value.trim()) {
-        $('w-meaning').value = pos + (def.definition || '');
+      // collect first definition per part of speech, across all entries
+      const seen = new Set();
+      const parts = [];
+      const examples = [];
+      for (const entry of (data || [])) {
+        for (const m of (entry.meanings || [])) {
+          const pos = m.partOfSpeech || '';
+          if (seen.has(pos)) continue;
+          const d = (m.definitions || [])[0];
+          if (!d || !d.definition) continue;
+          seen.add(pos);
+          const posLabel = POS_SHORT[pos] || (pos ? pos + '.' : '');
+          parts.push(posLabel ? `${posLabel} ${d.definition}` : d.definition);
+          if (d.example) examples.push(d.example);
+        }
       }
-      if (def.example && !$('w-example').value.trim()) {
-        $('w-example').value = def.example;
+      if (parts.length === 0) throw new Error('no definition');
+      if (!$('w-meaning').value.trim()) {
+        $('w-meaning').value = parts.join(' · ');
+      }
+      if (examples.length && !$('w-example').value.trim()) {
+        $('w-example').value = examples[0];
         autosize($('w-example'));
       }
       $('w-meaning').focus();
