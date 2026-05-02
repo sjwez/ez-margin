@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>em. — Ezio's Margin</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <style>
 :root {
   --bg: #fafaf7;
@@ -319,6 +320,213 @@ a.item-title:hover { text-decoration: underline; text-underline-offset: 3px; tex
   font-style: italic;
   margin-bottom: 8px;
 }
+/* markdown rendering (notes) */
+.md {
+  color: var(--soft);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-top: 8px;
+}
+.md > *:first-child { margin-top: 0; }
+.md > *:last-child { margin-bottom: 0; }
+.md h1, .md h2, .md h3, .md h4 {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 1.1em 0 0.4em;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.md h1 { font-size: 1.35em; }
+.md h2 { font-size: 1.18em; }
+.md h3 { font-size: 1.05em; }
+.md h4 { font-size: 1em; }
+.md p { margin: 0.6em 0; }
+.md ul, .md ol { margin: 0.6em 0; padding-left: 1.5em; }
+.md li { margin: 0.2em 0; }
+.md code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--line);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.md pre {
+  background: var(--line);
+  padding: 12px 14px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.88em;
+  margin: 0.8em 0;
+}
+.md pre code { background: none; padding: 0; }
+.md blockquote {
+  border-left: 2px solid var(--muted);
+  margin: 0.7em 0;
+  padding: 0.1em 0 0.1em 14px;
+  color: var(--soft);
+  font-style: italic;
+}
+.md a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+.md a:hover { color: var(--soft); }
+.md strong { font-weight: 600; color: var(--ink); }
+.md em { font-style: italic; }
+.md hr { border: none; border-top: 1px solid var(--line); margin: 1.2em 0; }
+.md table { border-collapse: collapse; margin: 0.8em 0; }
+.md th, .md td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; }
+.md th { background: var(--line); font-weight: 500; }
+/* todos / calendar */
+.calendar { margin-bottom: 28px; }
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+.cal-nav {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: inherit;
+}
+.cal-nav:hover { color: var(--ink); background: none; }
+.cal-month {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  min-width: 160px;
+  text-align: center;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.cal-dow {
+  text-align: center;
+  color: var(--muted);
+  font-size: 10px;
+  font-style: italic;
+  padding: 4px 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  position: relative;
+  color: var(--ink);
+  user-select: none;
+  transition: background 0.1s, border-color 0.1s;
+}
+.cal-day.other { color: var(--muted); opacity: 0.4; }
+.cal-day:hover { background: var(--line); }
+.cal-day.today { background: var(--ink); color: var(--bg); }
+.cal-day.today:hover { background: var(--ink); }
+.cal-day.selected:not(.today) { border-color: var(--ink); }
+.cal-day.has-tasks::after {
+  content: "";
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.cal-day.today.has-tasks::after { background: var(--bg); }
+.cal-day.all-done::after { background: var(--muted); opacity: 0.5; }
+.todos-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+.todos-date {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.todos-stats {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+}
+.todo-add {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.todo-add input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  padding: 8px 0;
+}
+.todo-add input::placeholder { color: var(--muted); font-style: italic; }
+.todo-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 32px 12px 0;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.todo-check {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--muted);
+  border-radius: 2px;
+  cursor: pointer;
+  margin-top: 4px;
+  position: relative;
+  transition: all 0.15s;
+}
+.todo-check:hover { border-color: var(--ink); }
+.todo-row.done .todo-check {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.todo-row.done .todo-check::after {
+  content: "✓";
+  color: var(--bg);
+  font-size: 11px;
+  position: absolute;
+  top: -2px;
+  left: 2px;
+}
+.todo-text {
+  flex: 1;
+  font-size: 15px;
+  color: var(--ink);
+  cursor: pointer;
+  line-height: 1.5;
+}
+.todo-row.done .todo-text {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.todo-row .item-actions { opacity: 1; }
 /* review (flashcard) mode */
 .review {
   display: none;
@@ -419,6 +627,7 @@ footer a:hover { color: var(--ink); }
       <a data-nav="papers" href="#/papers">papers</a>
       <a data-nav="notes"  href="#/notes">notes</a>
       <a data-nav="words"  href="#/words">words</a>
+      <a data-nav="todos"  href="#/todos">todos</a>
     </nav>
   </header>
 
@@ -444,7 +653,7 @@ footer a:hover { color: var(--ink); }
       <div id="n-banner" class="editing-banner" style="display:none">editing — <a id="n-cancel" style="cursor:pointer;text-decoration:underline">cancel</a></div>
       <input id="n-title" placeholder="note title" autocomplete="off">
       <input id="n-tag" placeholder="tag (optional)" autocomplete="off">
-      <textarea id="n-body" placeholder="write…" rows="3"></textarea>
+      <textarea id="n-body" placeholder="write… (markdown supported: # header, **bold**, *italic*, - list, [link](url), `code`)" rows="3"></textarea>
       <div class="actions">
         <span class="hint">⏎ to save · shift+⏎ for newline in body</span>
         <button id="n-add">Add</button>
@@ -523,6 +732,26 @@ footer a:hover { color: var(--ink); }
     </div>
   </section>
 
+  <!-- TODOS -->
+  <section id="view-todos" class="view">
+    <div class="calendar">
+      <div class="cal-header">
+        <button class="cal-nav" id="cal-prev" type="button" title="previous month">‹</button>
+        <span class="cal-month" id="cal-month"></span>
+        <button class="cal-nav" id="cal-next" type="button" title="next month">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="todos-header">
+      <span class="todos-date" id="t-date-label">Today</span>
+      <span class="todos-stats" id="t-stats"></span>
+    </div>
+    <div class="todo-add">
+      <input id="t-input" placeholder="add a task… (⏎ to save)" autocomplete="off">
+    </div>
+    <ul class="list" id="t-list"></ul>
+  </section>
+
   <footer>
     <span id="count">—</span>
     <span><a id="export">export</a> · <a id="import">import</a></span>
@@ -537,7 +766,8 @@ footer a:hover { color: var(--ink); }
   const KEYS = {
     papers: 'margin.papers.v1',
     notes: 'margin.notes.v1',
-    words: 'margin.words.v1'
+    words: 'margin.words.v1',
+    todos: 'margin.todos.v1'
   };
 
   const store = {};
@@ -590,9 +820,21 @@ footer a:hover { color: var(--ink); }
     u.rate = 0.95;
     speechSynthesis.speak(u);
   }
+  if (typeof marked !== 'undefined') {
+    marked.setOptions({ gfm: true, breaks: true, headerIds: false, mangle: false });
+  }
+  function renderMd(text) {
+    if (!text) return '';
+    if (typeof marked === 'undefined') return esc(text).replace(/\n/g, '<br>');
+    return marked.parse(text);
+  }
+  function dateKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function todayKey() { return dateKey(new Date()); }
 
   /* -------- routing -------- */
-  const sections = ['papers', 'notes', 'words'];
+  const sections = ['papers', 'notes', 'words', 'todos'];
   function route() {
     const hash = (location.hash.replace(/^#\/?/, '') || 'papers');
     const s = sections.includes(hash) ? hash : 'papers';
@@ -610,7 +852,7 @@ footer a:hover { color: var(--ink); }
     const hash = (location.hash.replace(/^#\/?/, '') || 'papers');
     const s = sections.includes(hash) ? hash : 'papers';
     const n = store[s].length;
-    const labels = { papers: 'paper', notes: 'note', words: 'word' };
+    const labels = { papers: 'paper', notes: 'note', words: 'word', todos: 'todo' };
     $('count').textContent = `${n} ${labels[s]}${n === 1 ? '' : 's'}`;
   }
 
@@ -687,7 +929,7 @@ footer a:hover { color: var(--ink); }
             <span>${fmtDate(n.updatedAt || n.addedAt)}${n.updatedAt && n.updatedAt !== n.addedAt ? ' (edited)' : ''}</span>
             ${n.tag ? `<span class="item-tag">${esc(n.tag)}</span>` : ''}
           </div>
-          ${n.body ? `<div class="item-body">${esc(n.body)}</div>` : ''}
+          ${n.body ? `<div class="md">${renderMd(n.body)}</div>` : ''}
           <div class="item-actions">
             <button data-act="edit-note" data-id="${esc(n.id)}">edit</button>
             <button class="x" data-act="del-note" data-id="${esc(n.id)}" title="remove">×</button>
@@ -1073,12 +1315,186 @@ footer a:hover { color: var(--ink); }
     if (e.key === 'Escape') exitReview();
   });
 
+  /* -------- todos -------- */
+  let selectedDate = todayKey();
+  let calendarMonth = new Date(); // first-of-month tracked by year/month only
+  calendarMonth.setDate(1);
+
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  function renderCalendar() {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDow = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthLast = new Date(year, month, 0).getDate();
+    const today = todayKey();
+
+    const tasksByDate = {};
+    for (const t of store.todos) {
+      if (!t.date) continue;
+      if (!tasksByDate[t.date]) tasksByDate[t.date] = { total: 0, done: 0 };
+      tasksByDate[t.date].total++;
+      if (t.done) tasksByDate[t.date].done++;
+    }
+
+    let html = '';
+    for (const d of DOW_SHORT) html += `<div class="cal-dow">${d}</div>`;
+
+    function dayCell(y, m, d, isOther) {
+      const k = dateKey(new Date(y, m, d));
+      const t = tasksByDate[k];
+      let cls = 'cal-day';
+      if (isOther) cls += ' other';
+      if (k === today) cls += ' today';
+      if (k === selectedDate) cls += ' selected';
+      if (t && t.total > 0) {
+        cls += ' has-tasks';
+        if (t.done === t.total) cls += ' all-done';
+      }
+      return `<div class="${cls}" data-date="${k}">${d}</div>`;
+    }
+
+    // pad start with last days of previous month
+    for (let i = firstDow - 1; i >= 0; i--) {
+      html += dayCell(year, month - 1, prevMonthLast - i, true);
+    }
+    // current month
+    for (let d = 1; d <= daysInMonth; d++) {
+      html += dayCell(year, month, d, false);
+    }
+    // pad end
+    const padEnd = (7 - ((firstDow + daysInMonth) % 7)) % 7;
+    for (let i = 1; i <= padEnd; i++) {
+      html += dayCell(year, month + 1, i, true);
+    }
+
+    $('cal-grid').innerHTML = html;
+    $('cal-month').textContent = `${MONTHS[month]} ${year}`;
+  }
+
+  function renderTodos() {
+    const day = store.todos.filter(t => t.date === selectedDate);
+    day.sort((a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return (a.addedAt || 0) - (b.addedAt || 0);
+    });
+    const list = $('t-list');
+    if (day.length === 0) {
+      list.innerHTML = `<li class="empty">no todos for this day.</li>`;
+    } else {
+      list.innerHTML = day.map(t => `
+        <li class="todo-row ${t.done ? 'done' : ''}">
+          <span class="todo-check" data-act="toggle-todo" data-id="${esc(t.id)}"></span>
+          <span class="todo-text" data-act="edit-todo" data-id="${esc(t.id)}">${esc(t.text)}</span>
+          <div class="item-actions"><button class="x" data-act="del-todo" data-id="${esc(t.id)}" title="remove">×</button></div>
+        </li>
+      `).join('');
+    }
+    const total = day.length;
+    const done = day.filter(t => t.done).length;
+    $('t-stats').textContent = total === 0 ? '' : `${done} of ${total} done`;
+
+    const today = todayKey();
+    let label;
+    if (selectedDate === today) {
+      label = 'Today';
+    } else {
+      const [y, m, d] = selectedDate.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      const diff = Math.round((dt - new Date(today + 'T00:00:00')) / 86400000);
+      const dow = DOW_SHORT[dt.getDay()];
+      const md = `${MONTHS[m-1]} ${d}`;
+      let suffix = '';
+      if (diff === -1) suffix = ' · yesterday';
+      else if (diff === 1) suffix = ' · tomorrow';
+      else if (diff < 0) suffix = ` · ${Math.abs(diff)} days ago`;
+      else if (diff > 0) suffix = ` · in ${diff} days`;
+      label = `${dow} · ${md}${suffix}`;
+    }
+    $('t-date-label').textContent = label;
+
+    renderCalendar();
+    updateCount();
+  }
+
+  function addTodo() {
+    const text = $('t-input').value.trim();
+    if (!text) return;
+    store.todos.unshift({
+      id: uid(),
+      text,
+      date: selectedDate,
+      done: false,
+      doneAt: null,
+      addedAt: Date.now()
+    });
+    persist('todos');
+    $('t-input').value = '';
+    renderTodos();
+  }
+
+  $('t-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); addTodo(); }
+  });
+
+  $('cal-prev').addEventListener('click', () => {
+    calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
+    renderCalendar();
+  });
+  $('cal-next').addEventListener('click', () => {
+    calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
+    renderCalendar();
+  });
+  $('cal-grid').addEventListener('click', (e) => {
+    const cell = e.target.closest('.cal-day');
+    if (!cell || !cell.dataset.date) return;
+    selectedDate = cell.dataset.date;
+    const [y, m] = selectedDate.split('-').map(Number);
+    if (calendarMonth.getMonth() !== (m - 1) || calendarMonth.getFullYear() !== y) {
+      calendarMonth = new Date(y, m - 1, 1);
+    }
+    renderTodos();
+  });
+
+  $('t-list').addEventListener('click', (e) => {
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
+    const id = el.dataset.id;
+    const t = store.todos.find(x => x.id === id);
+    if (!t) return;
+    if (el.dataset.act === 'toggle-todo') {
+      t.done = !t.done;
+      t.doneAt = t.done ? Date.now() : null;
+      persist('todos');
+      renderTodos();
+    } else if (el.dataset.act === 'edit-todo') {
+      const next = prompt('edit task', t.text);
+      if (next !== null) {
+        const trimmed = next.trim();
+        if (trimmed) {
+          t.text = trimmed;
+          persist('todos');
+          renderTodos();
+        }
+      }
+    } else if (el.dataset.act === 'del-todo') {
+      if (confirm('remove this todo?')) {
+        store.todos = store.todos.filter(x => x.id !== id);
+        persist('todos');
+        renderTodos();
+      }
+    }
+  });
+
   /* -------- export / import -------- */
   $('export').addEventListener('click', () => {
     const payload = {
       papers: store.papers,
       notes: store.notes,
       words: store.words,
+      todos: store.todos,
       exportedAt: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -1097,9 +1513,9 @@ footer a:hover { color: var(--ink); }
       try {
         const data = JSON.parse(reader.result);
         const incoming = Array.isArray(data)
-          ? { papers: data, notes: [], words: [] }
-          : { papers: data.papers || [], notes: data.notes || [], words: data.words || [] };
-        for (const k of ['papers','notes','words']) {
+          ? { papers: data, notes: [], words: [], todos: [] }
+          : { papers: data.papers || [], notes: data.notes || [], words: data.words || [], todos: data.todos || [] };
+        for (const k of ['papers','notes','words','todos']) {
           const ids = new Set(store[k].map(x => x.id));
           const merged = store[k].concat(incoming[k].filter(x => x && x.id && !ids.has(x.id)));
           merged.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
@@ -1109,6 +1525,7 @@ footer a:hover { color: var(--ink); }
         renderPapers();
         renderNotes();
         renderWords();
+        renderTodos();
         alert('imported.');
       } catch (err) {
         alert('import failed: ' + err.message);
@@ -1122,6 +1539,7 @@ footer a:hover { color: var(--ink); }
   renderPapers();
   renderNotes();
   renderWords();
+  renderTodos();
   route();
 })();
 </script>
