@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>em. — Ezio's Margin</title>
+<style>
+:root {
+  --bg: #fafaf7;
+  --ink: #111;
+  --muted: #8a8a86;
+  --line: #e5e2da;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-serif, "Iowan Old Style", "Apple Garamond", Georgia, Cambria, serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 96px 32px 160px;
+}
+header { margin-bottom: 64px; }
+.logo {
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.tagline {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 14px;
+}
+.add {
+  margin-bottom: 48px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+}
+.add input, .add textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+  resize: none;
+}
+.add input::placeholder, .add textarea::placeholder {
+  color: var(--muted);
+  font-style: italic;
+}
+.add textarea { min-height: 24px; line-height: 1.5; padding-top: 12px; }
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+.hint { color: var(--muted); font-size: 12px; font-style: italic; }
+button {
+  background: transparent;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding: 6px 18px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+button:hover { background: var(--ink); color: var(--bg); }
+.search { margin-bottom: 8px; }
+.search input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-style: italic;
+}
+.list { list-style: none; padding: 0; margin: 0; }
+.item {
+  padding: 22px 32px 22px 0;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.item-title {
+  display: block;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 18px;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.item-title:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.item-meta {
+  display: flex;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}
+.item-tag::before { content: "·"; margin-right: 12px; }
+.item-note {
+  margin-top: 8px;
+  color: #444;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.item-delete {
+  position: absolute;
+  top: 20px;
+  right: 0;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.15s;
+}
+.item:hover .item-delete { opacity: 1; }
+.item-delete:hover { color: var(--ink); background: none; }
+.empty {
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+  padding: 64px 0;
+  list-style: none;
+}
+footer {
+  margin-top: 64px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+}
+footer a { color: var(--muted); cursor: pointer; text-decoration: none; }
+footer a:hover { color: var(--ink); }
+@media (max-width: 600px) {
+  .wrap { padding: 56px 24px 120px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 class="logo">em.</h1>
+    <p class="tagline">Ezio's Margin · a place for papers I don't want to forget</p>
+  </header>
+
+  <section class="add">
+    <input id="f-title" placeholder="paper title" autocomplete="off">
+    <input id="f-url" placeholder="link (https://…)" autocomplete="off">
+    <input id="f-tag" placeholder="tag (optional)" autocomplete="off">
+    <textarea id="f-note" placeholder="why it matters (optional)" rows="1"></textarea>
+    <div class="actions">
+      <span class="hint">⏎ to save · shift+⏎ for newline</span>
+      <button id="add-btn">Add</button>
+    </div>
+  </section>
+
+  <div class="search">
+    <input id="search" placeholder="search…" autocomplete="off">
+  </div>
+
+  <ul class="list" id="list"></ul>
+
+  <footer>
+    <span id="count">0 papers</span>
+    <span><a id="export">export</a> · <a id="import">import</a></span>
+  </footer>
+</div>
+
+<input type="file" id="import-file" accept="application/json" style="display:none">
+
+<script>
+(function () {
+  const KEY = 'margin.papers.v1';
+  const $ = (id) => document.getElementById(id);
+  let papers = load();
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+    catch (e) { return []; }
+  }
+  function save() { localStorage.setItem(KEY, JSON.stringify(papers)); }
+
+  function fmtDate(ts) {
+    const d = new Date(ts);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  }
+  function esc(s) {
+    return (s || '').replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function normalizeUrl(u) {
+    if (!u) return u;
+    if (!/^https?:\/\//i.test(u)) return 'https://' + u;
+    return u;
+  }
+
+  function autosizeNote() {
+    const t = $('f-note');
+    t.style.height = 'auto';
+    t.style.height = t.scrollHeight + 'px';
+  }
+
+  function render() {
+    const q = $('search').value.trim().toLowerCase();
+    const filtered = papers.filter(p => {
+      if (!q) return true;
+      return ((p.title || '') + ' ' + (p.tag || '') + ' ' + (p.note || ''))
+        .toLowerCase().includes(q);
+    });
+    const list = $('list');
+    if (filtered.length === 0) {
+      list.innerHTML = `<li class="empty">${papers.length === 0 ? 'no papers yet.' : 'nothing matches.'}</li>`;
+    } else {
+      list.innerHTML = filtered.map(p => `
+        <li class="item">
+          <a class="item-title" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.title)}</a>
+          <div class="item-meta">
+            <span>${fmtDate(p.addedAt)}</span>
+            ${p.tag ? `<span class="item-tag">${esc(p.tag)}</span>` : ''}
+          </div>
+          ${p.note ? `<div class="item-note">${esc(p.note)}</div>` : ''}
+          <button class="item-delete" data-id="${esc(p.id)}" title="remove">×</button>
+        </li>
+      `).join('');
+    }
+    $('count').textContent = `${papers.length} paper${papers.length === 1 ? '' : 's'}`;
+  }
+
+  function add() {
+    const title = $('f-title').value.trim();
+    const url = normalizeUrl($('f-url').value.trim());
+    if (!title) { $('f-title').focus(); return; }
+    if (!url) { $('f-url').focus(); return; }
+    papers.unshift({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      title,
+      url,
+      tag: $('f-tag').value.trim(),
+      note: $('f-note').value.trim(),
+      addedAt: Date.now()
+    });
+    save();
+    ['f-title','f-url','f-tag','f-note'].forEach(id => $(id).value = '');
+    autosizeNote();
+    $('f-title').focus();
+    render();
+  }
+
+  $('add-btn').addEventListener('click', add);
+
+  ['f-title','f-url','f-tag','f-note'].forEach(id => {
+    $(id).addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      if (id === 'f-note' && e.shiftKey) return;
+      e.preventDefault();
+      add();
+    });
+  });
+  $('f-note').addEventListener('input', autosizeNote);
+
+  $('search').addEventListener('input', render);
+
+  $('list').addEventListener('click', (e) => {
+    const btn = e.target.closest('.item-delete');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (confirm('remove this paper?')) {
+      papers = papers.filter(p => p.id !== id);
+      save();
+      render();
+    }
+  });
+
+  $('export').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(papers, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `margin-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  $('import').addEventListener('click', () => $('import-file').click());
+  $('import-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const incoming = JSON.parse(reader.result);
+        if (!Array.isArray(incoming)) throw new Error('not an array');
+        const ids = new Set(papers.map(p => p.id));
+        const merged = papers.concat(incoming.filter(p => p && p.id && !ids.has(p.id)));
+        merged.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+        papers = merged;
+        save();
+        render();
+      } catch (err) {
+        alert('import failed: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
